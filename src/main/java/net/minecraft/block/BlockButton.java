@@ -99,7 +99,7 @@ public abstract class BlockButton extends BlockDirectional {
         boolean flag = iblockdata.func_193401_d(world, blockposition1, enumdirection) == BlockFaceShape.SOLID;
         Block block = iblockdata.func_177230_c();
 
-        return enumdirection == EnumFacing.UP ? block == Blocks.field_150438_bZ || !func_193384_b(block) && flag : !func_193382_c(block) && flag;
+        return enumdirection == EnumFacing.UP ? iblockdata.func_185896_q() || !func_193384_b(block) && flag : !func_193382_c(block) && flag; // Akarin Forge
     }
 
     public IBlockState func_180642_a(World world, BlockPos blockposition, EnumFacing enumdirection, float f, float f1, float f2, int i, EntityLivingBase entityliving) {
