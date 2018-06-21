@@ -25,7 +25,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockDoublePlant extends BlockBush implements IGrowable {
+public class BlockDoublePlant extends BlockBush implements IGrowable, net.minecraftforge.common.IShearable { // Akarin Forge
 
     public static final PropertyEnum<BlockDoublePlant.EnumPlantType> field_176493_a = PropertyEnum.func_177709_a("variant", BlockDoublePlant.EnumPlantType.class);
     public static final PropertyEnum<BlockDoublePlant.EnumBlockHalf> field_176492_b = PropertyEnum.func_177709_a("half", BlockDoublePlant.EnumBlockHalf.class);
@@ -81,21 +81,21 @@ public class BlockDoublePlant extends BlockBush implements IGrowable {
             Object object = flag ? this : world.func_180495_p(blockposition1).func_177230_c();
             Object object1 = flag ? world.func_180495_p(blockposition2).func_177230_c() : this;
 
+            if (!flag) this.func_176226_b(world, blockposition2, iblockdata, 0); // Forge move above the setting to air. // Akarin Forge
+            
             if (object == this) {
                 world.func_180501_a(blockposition1, Blocks.field_150350_a.func_176223_P(), 2);
             }
 
             if (object1 == this) {
                 world.func_180501_a(blockposition2, Blocks.field_150350_a.func_176223_P(), 3);
-                if (!flag) {
-                    this.func_176226_b(world, blockposition2, iblockdata, 0);
-                }
             }
 
         }
     }
 
     public boolean func_180671_f(World world, BlockPos blockposition, IBlockState iblockdata) {
+        if (iblockdata.func_177230_c() != this) return super.func_180671_f(world, blockposition, iblockdata); // Forge: This function is called during world gen and placement, before this block is set, so if we are not 'here' then assume it's the pre-check. // Akarin Forge
         if (iblockdata.func_177229_b(BlockDoublePlant.field_176492_b) == BlockDoublePlant.EnumBlockHalf.UPPER) {
             return world.func_180495_p(blockposition.func_177977_b()).func_177230_c() == this;
         } else {
@@ -129,9 +129,9 @@ public class BlockDoublePlant extends BlockBush implements IGrowable {
     }
 
     public void func_180657_a(World world, EntityPlayer entityhuman, BlockPos blockposition, IBlockState iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
-        if (world.field_72995_K || itemstack.func_77973_b() != Items.field_151097_aZ || iblockdata.func_177229_b(BlockDoublePlant.field_176492_b) != BlockDoublePlant.EnumBlockHalf.LOWER || !this.func_176489_b(world, blockposition, iblockdata, entityhuman)) {
+        // if (world.field_72995_K || itemstack.func_77973_b() != Items.field_151097_aZ || iblockdata.func_177229_b(BlockDoublePlant.field_176492_b) != BlockDoublePlant.EnumBlockHalf.LOWER || !this.func_176489_b(world, blockposition, iblockdata, entityhuman)) { // Akarin Forge
             super.func_180657_a(world, entityhuman, blockposition, iblockdata, tileentity, itemstack);
-        }
+        // } // Akarin Forge
     }
 
     public void func_176208_a(World world, BlockPos blockposition, IBlockState iblockdata, EntityPlayer entityhuman) {
@@ -169,9 +169,11 @@ public class BlockDoublePlant extends BlockBush implements IGrowable {
             return false;
         } else {
             entityhuman.func_71029_a(StatList.func_188055_a((Block) this));
-            int i = (blocktallplant_enumtallflowervariants == BlockDoublePlant.EnumPlantType.GRASS ? BlockTallGrass.EnumType.GRASS : BlockTallGrass.EnumType.FERN).func_177044_a();
+            // Akarin Forge - start
+            // int i = (blocktallplant_enumtallflowervariants == BlockDoublePlant.EnumPlantType.GRASS ? BlockTallGrass.EnumType.GRASS : BlockTallGrass.EnumType.FERN).func_177044_a();
 
-            func_180635_a(world, blockposition, new ItemStack(Blocks.field_150329_H, 2, i));
+            // func_180635_a(world, blockposition, new ItemStack(Blocks.field_150329_H, 2, i));
+            // Akarin Forge - end
             return true;
         }
     }
@@ -304,4 +306,22 @@ public class BlockDoublePlant extends BlockBush implements IGrowable {
 
         }
     }
+    
+    // Akarin Forge - start
+    @Override
+    public boolean isShearable(ItemStack item, IBlockAccess world, BlockPos pos) {
+        IBlockState state = world.func_180495_p(pos);
+        EnumPlantType type = (EnumPlantType) state.func_177229_b(field_176493_a);
+        return state.func_177229_b(field_176492_b) == EnumBlockHalf.LOWER && (type == EnumPlantType.FERN || type == EnumPlantType.GRASS);
+    }
+    
+    @Override
+    public java.util.List<ItemStack> onSheared(ItemStack item, net.minecraft.world.IBlockAccess world, BlockPos pos, int fortune) {
+        java.util.List<ItemStack> ret = new java.util.ArrayList<ItemStack>();
+        EnumPlantType type = (EnumPlantType) world.func_180495_p(pos).func_177229_b(field_176493_a);
+        if (type == EnumPlantType.FERN) ret.add(new ItemStack(Blocks.field_150329_H, 2, BlockTallGrass.EnumType.FERN.func_177044_a()));
+        if (type == EnumPlantType.GRASS) ret.add(new ItemStack(Blocks.field_150329_H, 2, BlockTallGrass.EnumType.GRASS.func_177044_a()));
+        return ret;
+    }
+    // Akarin Forge - end
 }
