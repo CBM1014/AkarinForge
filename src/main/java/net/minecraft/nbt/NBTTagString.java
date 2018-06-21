@@ -26,6 +26,7 @@ public class NBTTagString extends NBTBase {
         nbtreadlimiter.func_152450_a(288L);
         this.field_74751_a = datainput.readUTF();
         nbtreadlimiter.func_152450_a((long) (16 * this.field_74751_a.length()));
+        NBTSizeTracker.readUTF(nbtreadlimiter, field_74751_a); // Forge: Correctly read String length including header.
     }
 
     public byte func_74732_a() {

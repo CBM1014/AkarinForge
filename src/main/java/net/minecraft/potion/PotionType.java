@@ -9,10 +9,11 @@ import net.minecraft.init.MobEffects;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.RegistryNamespacedDefaultedByKey;
 
-public class PotionType {
+public class PotionType extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<PotionType> {
 
+    @Deprecated // unused
     private static final ResourceLocation field_185177_b = new ResourceLocation("empty");
-    public static final RegistryNamespacedDefaultedByKey<ResourceLocation, PotionType> field_185176_a = new RegistryNamespacedDefaultedByKey(PotionType.field_185177_b);
+    public static final RegistryNamespacedDefaultedByKey<ResourceLocation, PotionType> field_185176_a = net.minecraftforge.registries.GameData.getWrapperDefaulted(PotionType.class);
     private static int field_185178_c;
     private final String field_185179_d;
     private final ImmutableList<PotionEffect> field_185180_e;

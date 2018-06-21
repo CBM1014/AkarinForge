@@ -167,4 +167,14 @@ public class Profiler {
             return methodprofiler_profilerinfo.field_76332_a < this.field_76332_a ? -1 : (methodprofiler_profilerinfo.field_76332_a > this.field_76332_a ? 1 : methodprofiler_profilerinfo.field_76331_c.compareTo(this.field_76331_c));
         }
     }
+    
+    /**
+     * Forge: Fix for MC-117087, World.updateEntities is wasting time calling Class.getSimpleName() when the profiler is not active
+     */
+    @Deprecated // TODO: remove (1.13)
+    public void startSection(Class<?> profiledClass) {
+        if (this.field_76327_a) {
+            func_76320_a(profiledClass.getSimpleName());
+        }
+    }
 }

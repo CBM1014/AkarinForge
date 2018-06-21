@@ -10,7 +10,7 @@ import java.util.Objects;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NBTTagList extends NBTBase {
+public class NBTTagList extends NBTBase implements java.lang.Iterable<NBTBase> {
 
     private static final Logger field_179239_b = LogManager.getLogger();
     public List<NBTBase> field_74747_a = Lists.newArrayList(); // Paper
@@ -235,6 +235,8 @@ public class NBTTagList extends NBTBase {
     public int func_150303_d() {
         return this.field_74746_b;
     }
+    
+    @Override public java.util.Iterator<NBTBase> iterator() { return field_74747_a.iterator(); }
 
     public NBTBase clone() {
         return this.func_74737_b();

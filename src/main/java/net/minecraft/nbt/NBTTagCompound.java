@@ -388,6 +388,7 @@ public class NBTTagCompound extends NBTBase {
     }
 
     private static byte func_152447_a(DataInput datainput, NBTSizeTracker nbtreadlimiter) throws IOException {
+        nbtreadlimiter.func_152450_a(8);
         return datainput.readByte();
     }
 
@@ -396,6 +397,7 @@ public class NBTTagCompound extends NBTBase {
     }
 
     static NBTBase func_152449_a(byte b0, String s, DataInput datainput, int i, NBTSizeTracker nbtreadlimiter) throws IOException {
+        nbtreadlimiter.func_152450_a(32); // Forge: 4 extra bytes for the object allocation.
         NBTBase nbtbase = NBTBase.func_150284_a(b0);
 
         try {

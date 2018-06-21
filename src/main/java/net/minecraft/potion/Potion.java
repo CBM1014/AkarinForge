@@ -29,9 +29,9 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 // CraftBukkit end
 
-public class Potion {
+public class Potion extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<Potion> {
 
-    public static final RegistryNamespaced<ResourceLocation, Potion> field_188414_b = new RegistryNamespaced();
+    public static final RegistryNamespaced<ResourceLocation, Potion> field_188414_b = net.minecraftforge.registries.GameData.getWrapper(Potion.class);
     private final Map<IAttribute, AttributeModifier> field_111188_I = Maps.newHashMap();
     private final boolean field_76418_K;
     private final int field_76414_N;
@@ -63,6 +63,10 @@ public class Potion {
         }
 
         this.field_76414_N = i;
+    }
+    
+    public boolean func_76398_f() {
+        return this.field_76418_K;
     }
 
     protected Potion func_76399_b(int i, int j) {
@@ -247,4 +251,59 @@ public class Potion {
         }
         // CraftBukkit end
     }
+    
+    /* ======================================== FORGE START =====================================*/
+
+    /**
+     * If the Potion effect should be displayed in the players inventory
+     * @param effect the active PotionEffect
+     * @return true to display it (default), false to hide it.
+     */
+    public boolean shouldRender(PotionEffect effect) { return true; }
+
+    /**
+     * If the standard PotionEffect text (name and duration) should be drawn when this potion is active.
+     * @param effect the active PotionEffect
+     * @return true to draw the standard text
+     */
+    public boolean shouldRenderInvText(PotionEffect effect)
+    {
+        return true;
+    }
+
+    /**
+     * If the Potion effect should be displayed in the player's ingame HUD
+     * @param effect the active PotionEffect
+     * @return true to display it (default), false to hide it.
+     */
+    public boolean shouldRenderHUD(PotionEffect effect)
+    {
+        return true;
+    }
+
+    /**
+     * Get a fresh list of items that can cure this Potion.
+     * All new PotionEffects created from this Potion will call this to initialize the default curative items
+     * @see PotionEffect#getCurativeItems
+     * @return A list of items that can cure this Potion
+     */
+    public java.util.List<net.minecraft.item.ItemStack> getCurativeItems()
+    {
+        java.util.ArrayList<net.minecraft.item.ItemStack> ret = new java.util.ArrayList<net.minecraft.item.ItemStack>();
+        ret.add(new net.minecraft.item.ItemStack(net.minecraft.init.Items.field_151117_aB));
+        return ret;
+    }
+    
+    /**
+     * Used for determining {@code PotionEffect} sort order in GUIs.
+     * Defaults to the {@code PotionEffect}'s liquid color.
+     * @param potionEffect the {@code PotionEffect} instance containing the potion
+     * @return a value used to sort {@code PotionEffect}s in GUIs 
+     */
+    public int getGuiSortColor(PotionEffect potionEffect)
+    {
+        return this.func_76401_j();
+    }
+
+    /* ======================================== FORGE END =====================================*/
 }
