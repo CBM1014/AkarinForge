@@ -81,13 +81,15 @@ public class BlockBanner extends BlockContainer {
     }
 
     public void func_180653_a(World world, BlockPos blockposition, IBlockState iblockdata, float f, int i) {
-        ItemStack itemstack = this.func_185549_e(world, blockposition);
+        // Akarin Forge - start
+        // ItemStack itemstack = this.func_185549_e(world, blockposition);
 
-        if (itemstack.func_190926_b()) {
+        // if (itemstack.func_190926_b()) {
             super.func_180653_a(world, blockposition, iblockdata, f, i);
-        } else {
-            func_180635_a(world, blockposition, itemstack);
-        }
+         // } else {
+         //    func_180635_a(world, blockposition, itemstack);
+         // }
+        // Akarin Forge - end
 
     }
 
@@ -216,4 +218,20 @@ public class BlockBanner extends BlockContainer {
             return new BlockStateContainer(this, new IProperty[] { BlockBanner.BlockBannerHanging.field_176449_a});
         }
     }
+    
+    // Akarin Forge - start
+    @Override
+    public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+        TileEntity te = world.func_175625_s(pos);
+
+        if (te instanceof TileEntityBanner) {
+            TileEntityBanner tileentitybanner = (TileEntityBanner)te;
+            ItemStack itemstack = tileentitybanner.func_190615_l();
+            drops.add(itemstack);
+        }
+        else {
+            drops.add(new ItemStack(Items.field_179564_cE, 1, 0));
+        }
+    }
+    // Akarin Forge - end
 }
