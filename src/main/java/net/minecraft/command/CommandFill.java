@@ -72,7 +72,7 @@ public class CommandFill extends CommandBase {
                 NBTTagCompound nbttagcompound = new NBTTagCompound();
                 boolean flag = false;
 
-                if (astring.length >= 10 && block.func_149716_u()) {
+                if (astring.length >= 10 && block.hasTileEntity(iblockdata)) {
                     String s = func_180529_a(astring, 9);
 
                     try {
@@ -100,7 +100,7 @@ public class CommandFill extends CommandBase {
                                         if (!world.func_175623_d(blockposition4)) {
                                             continue;
                                         }
-                                    } else if ("replace".equals(astring[8]) && !block.func_149716_u() && astring.length > 9) {
+                                    } else if ("replace".equals(astring[8]) && !block.hasTileEntity(iblockdata) && astring.length > 9) {
                                         Block block1 = CommandBase.func_147180_g(icommandlistener, astring[9]);
 
                                         if (world.func_180495_p(blockposition4).func_177230_c() != block1 || astring.length > 10 && !"-1".equals(astring[10]) && !"*".equals(astring[10]) && !CommandBase.func_190791_b(block1, astring[10]).apply(world.func_180495_p(blockposition4))) {

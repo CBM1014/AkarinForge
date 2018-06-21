@@ -51,6 +51,17 @@ public abstract class CommandHandler implements ICommandManager {
                 chatmessage.func_150256_b().func_150238_a(TextFormatting.RED);
                 icommandlistener.func_145747_a(chatmessage);
             } else if (icommand.func_184882_a(this.func_184879_a(), icommandlistener)) {
+                net.minecraftforge.event.CommandEvent event = new net.minecraftforge.event.CommandEvent(icommand, icommandlistener, astring);
+                if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event))
+                {
+                    if (event.getException() != null)
+                    {
+                        com.google.common.base.Throwables.throwIfUnchecked(event.getException());
+                    }
+                    return 1;
+                }
+                if (event.getParameters() != null) astring = event.getParameters();
+                
                 if (j > -1) {
                     List list = EntitySelector.func_179656_b(icommandlistener, astring[j], Entity.class);
                     String s2 = astring[j];

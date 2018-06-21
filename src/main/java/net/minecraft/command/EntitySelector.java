@@ -120,7 +120,11 @@ public class EntitySelector {
         }
     }
 
-    public static <T extends Entity> List<T> func_179656_b(ICommandSender icommandlistener, String s, Class<? extends T> oclass) throws CommandException {
+    public static <T extends Entity> List<T> func_179656_b(ICommandSender p_179656_0_, String p_179656_1_, Class <? extends T > p_179656_2_) throws CommandException {
+        return net.minecraftforge.common.command.SelectorHandlerManager.matchEntities(p_179656_0_, p_179656_1_, p_179656_2_);
+    }
+
+    public static <T extends Entity> List<T> matchEntitiesDefault(ICommandSender icommandlistener, String s, Class<? extends T> oclass) throws CommandException {
         Matcher matcher = EntitySelector.field_82389_a.matcher(s);
 
         if (matcher.matches() && icommandlistener.func_70003_b(1, "@")) {
@@ -151,6 +155,7 @@ public class EntitySelector {
                         arraylist1.addAll(func_184951_f(map));
                         arraylist1.addAll(func_180698_a(map, vec3d));
                         arraylist1.addAll(func_179662_g(map));
+                        arraylist1.addAll(net.minecraftforge.fml.common.registry.GameRegistry.createEntitySelectors(map, s, icommandlistener, vec3d));
                         if ("s".equalsIgnoreCase(s1)) {
                             Entity entity = icommandlistener.func_174793_f();
 
@@ -684,6 +689,10 @@ public class EntitySelector {
     }
 
     public static boolean func_82377_a(String s) throws CommandException {
+        return net.minecraftforge.common.command.SelectorHandlerManager.matchesMultiplePlayers(s);
+    }
+
+    public static boolean matchesMultiplePlayersDefault(String s) throws CommandException {
         Matcher matcher = EntitySelector.field_82389_a.matcher(s);
 
         if (!matcher.matches()) {
@@ -698,6 +707,10 @@ public class EntitySelector {
     }
 
     public static boolean func_82378_b(String s) {
+        return net.minecraftforge.common.command.SelectorHandlerManager.isSelector(s);
+    }
+
+    public static boolean isSelectorDefault(String s) {
         return EntitySelector.field_82389_a.matcher(s).matches();
     }
 

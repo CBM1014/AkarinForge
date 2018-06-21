@@ -300,7 +300,7 @@ public abstract class CommandBase implements ICommand {
                 chatcomponenttext.func_150258_a(" ");
             }
 
-            Object object = new TextComponentString(astring[j]);
+            Object object = net.minecraftforge.common.ForgeHooks.newChatWithLinks(astring[i]); // Forge: links for messages
 
             if (flag) {
                 ITextComponent ichatbasecomponent = EntitySelector.func_150869_b(icommandlistener, astring[j]);

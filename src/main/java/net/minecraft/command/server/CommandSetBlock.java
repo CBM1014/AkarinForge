@@ -62,7 +62,7 @@ public class CommandSetBlock extends CommandBase {
                 NBTTagCompound nbttagcompound = new NBTTagCompound();
                 boolean flag = false;
 
-                if (astring.length >= 7 && block.func_149716_u()) {
+                if (astring.length >= 7 && block.hasTileEntity(iblockdata)) {
                     String s = func_180529_a(astring, 6);
 
                     try {
