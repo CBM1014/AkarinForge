@@ -40,7 +40,8 @@ public class BlockCocoa extends BlockHorizontal implements IGrowable {
     public void func_180650_b(World world, BlockPos blockposition, IBlockState iblockdata, Random random) {
         if (!this.func_176499_e(world, blockposition, iblockdata)) {
             this.func_176500_f(world, blockposition, iblockdata);
-        } else if (world.field_73012_v.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.cocoaModifier) * 5)) == 0) { // Spigot
+        } else if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(world, blockposition, iblockdata, random.nextInt(
+                Math.max(1, (int) (100.0F / world.spigotConfig.cocoaModifier) * 5)) == 0)) { // Spigot // Akarin Forge
             int i = ((Integer) iblockdata.func_177229_b(BlockCocoa.field_176501_a)).intValue();
 
             if (i < 2) {
@@ -48,6 +49,7 @@ public class BlockCocoa extends BlockHorizontal implements IGrowable {
                 IBlockState data = iblockdata.func_177226_a(field_176501_a, Integer.valueOf(i + 1));
                 CraftEventFactory.handleBlockGrowEvent(world, blockposition.func_177958_n(), blockposition.func_177956_o(), blockposition.func_177952_p(), this, func_176201_c(data));
                 // CraftBukkit end
+                net.minecraftforge.common.ForgeHooks.onCropsGrowPost(world, blockposition, iblockdata, world.func_180495_p(blockposition)); // Akarin Forge
             }
         }
 
@@ -122,7 +124,15 @@ public class BlockCocoa extends BlockHorizontal implements IGrowable {
     }
 
     public void func_180653_a(World world, BlockPos blockposition, IBlockState iblockdata, float f, int i) {
-        int j = ((Integer) iblockdata.func_177229_b(BlockCocoa.field_176501_a)).intValue();
+        // Akarin Forge - start
+        super.func_180653_a(world, blockposition, iblockdata, f, i);
+    }
+    
+    @Override
+    public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+        super.getDrops(drops, world, pos, state, fortune);
+        // Akarin Forge - end
+        int j = ((Integer) state.func_177229_b(field_176501_a)).intValue();
         byte b0 = 1;
 
         if (j >= 2) {
@@ -130,7 +140,10 @@ public class BlockCocoa extends BlockHorizontal implements IGrowable {
         }
 
         for (int k = 0; k < b0; ++k) {
-            func_180635_a(world, blockposition, new ItemStack(Items.field_151100_aR, 1, EnumDyeColor.BROWN.func_176767_b()));
+            // Akarin Forge - start 
+            // func_180635_a(world, pos, new ItemStack(Items.field_151100_aR, 1, EnumDyeColor.BROWN.func_176767_b()));
+            drops.add(new ItemStack(Items.field_151100_aR, 1, EnumDyeColor.BROWN.func_176767_b()));
+            // Akarin Forge - end
         }
 
     }
