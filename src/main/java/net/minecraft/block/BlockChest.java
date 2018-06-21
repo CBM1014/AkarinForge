@@ -431,8 +431,8 @@ public class BlockChest extends BlockContainer {
         return this.func_176456_n(world, blockposition) || this.func_176453_o(world, blockposition);
     }
 
-    private boolean func_176456_n(World world, BlockPos blockposition) {
-        return world.func_180495_p(blockposition.func_177984_a()).func_185915_l();
+    private boolean func_176456_n(World p_176456_1_, BlockPos p_176456_2_) { // Akarin Forge
+        return p_176456_1_.func_180495_p(p_176456_2_.func_177984_a()).doesSideBlockChestOpening(p_176456_1_, p_176456_2_.func_177984_a(), EnumFacing.DOWN); // Akarin Forge
     }
 
     private boolean func_176453_o(World world, BlockPos blockposition) {
@@ -502,4 +502,11 @@ public class BlockChest extends BlockContainer {
 
         private Type() {}
     }
+    
+    // Akarin Forge - start
+    /* ======================================== FORGE START =====================================*/
+    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis) {
+        return !func_176454_e(world, pos) && super.rotateBlock(world, pos, axis);
+    }
+    // Akarin Forge - end
 }
