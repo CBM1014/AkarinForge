@@ -152,7 +152,7 @@ public class BlockDoor extends Block {
                 flag = true;
             }
 
-            if (!world.func_180495_p(blockposition.func_177977_b()).func_185896_q()) {
+            if (!world.func_180495_p(blockposition.func_177977_b()).isSideSolid(world, blockposition.func_177977_b(), EnumFacing.UP)) { // Akarin Forge
                 world.func_175698_g(blockposition);
                 flag = true;
                 if (iblockdata2.func_177230_c() == this) {
@@ -199,7 +199,14 @@ public class BlockDoor extends Block {
     }
 
     public boolean func_176196_c(World world, BlockPos blockposition) {
-        return blockposition.func_177956_o() >= 255 ? false : world.func_180495_p(blockposition.func_177977_b()).func_185896_q() && super.func_176196_c(world, blockposition) && super.func_176196_c(world, blockposition.func_177984_a());
+        // Akarin Forge - start
+        if (blockposition.func_177956_o() >= world.func_72800_K() - 1) {
+            return false;
+        } else {
+            IBlockState state = world.func_180495_p(blockposition.func_177977_b());
+            return (state.func_185896_q() || state.func_193401_d(world, blockposition.func_177977_b(), EnumFacing.UP) == BlockFaceShape.SOLID) && super.func_176196_c(world, blockposition) && super.func_176196_c(world, blockposition.func_177984_a());
+        }
+        // Akarin Forge - end
     }
 
     public EnumPushReaction func_149656_h(IBlockState iblockdata) {
