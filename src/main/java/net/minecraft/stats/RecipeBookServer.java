@@ -58,8 +58,8 @@ public class RecipeBookServer extends RecipeBook {
         this.func_194081_a(SPacketRecipeBook.State.REMOVE, entityplayer, arraylist);
     }
 
-    private void func_194081_a(SPacketRecipeBook.State packetplayoutrecipes_action, EntityPlayerMP entityplayer, List<IRecipe> list) {
-        entityplayer.field_71135_a.func_147359_a(new SPacketRecipeBook(packetplayoutrecipes_action, list, Collections.emptyList(), this.field_192818_b, this.field_192819_c));
+    private void func_194081_a(SPacketRecipeBook.State p_194081_1_, EntityPlayerMP p_194081_2_, List<IRecipe> p_194081_3_) {
+        net.minecraftforge.common.ForgeHooks.sendRecipeBook(p_194081_2_.field_71135_a, p_194081_1_, p_194081_3_, Collections.emptyList(), this.field_192818_b, this.field_192819_c);
     }
 
     public NBTTagCompound func_192824_e() {
@@ -149,7 +149,7 @@ public class RecipeBookServer extends RecipeBook {
         return arraylist;
     }
 
-    public void func_192826_c(EntityPlayerMP entityplayer) {
-        entityplayer.field_71135_a.func_147359_a(new SPacketRecipeBook(SPacketRecipeBook.State.INIT, this.func_194079_d(), this.func_194080_e(), this.field_192818_b, this.field_192819_c));
+    public void func_192826_c(EntityPlayerMP p_192826_1_) {
+        net.minecraftforge.common.ForgeHooks.sendRecipeBook(p_192826_1_.field_71135_a, SPacketRecipeBook.State.INIT, this.func_194079_d(), this.func_194080_e(), this.field_192818_b, this.field_192819_c);
     }
 }

@@ -160,7 +160,7 @@ public class StatList {
             }
         }
 
-        func_75924_a(StatList.field_188066_af);
+        replaceAllSimilarBlocks(field_188066_af, true);
     }
 
     private static void func_151181_c() {
@@ -181,7 +181,7 @@ public class StatList {
             }
         }
 
-        func_75924_a(StatList.field_188065_ae);
+        replaceAllSimilarBlocks(field_188065_ae, false);
     }
 
     private static void func_75925_c() {
@@ -203,7 +203,7 @@ public class StatList {
             }
         }
 
-        func_75924_a(StatList.field_75929_E);
+        replaceAllSimilarBlocks(field_75929_E, true);
     }
 
     private static void func_151179_e() {
@@ -222,7 +222,7 @@ public class StatList {
             }
         }
 
-        func_75924_a(StatList.field_75930_F);
+        replaceAllSimilarBlocks(field_75930_F, true);
     }
 
     private static void func_188054_f() {
@@ -242,7 +242,7 @@ public class StatList {
             }
         }
 
-        func_75924_a(StatList.field_75930_F);
+        replaceAllSimilarBlocks(field_75930_F, true);
     }
 
     private static String func_180204_a(Item item) {
@@ -251,26 +251,33 @@ public class StatList {
         return minecraftkey != null ? minecraftkey.toString().replace(':', '.') : null;
     }
 
-    private static void func_75924_a(StatBase[] astatistic) {
-        func_151180_a(astatistic, Blocks.field_150355_j, Blocks.field_150358_i);
-        func_151180_a(astatistic, Blocks.field_150353_l, Blocks.field_150356_k);
-        func_151180_a(astatistic, Blocks.field_150428_aP, Blocks.field_150423_aK);
-        func_151180_a(astatistic, Blocks.field_150470_am, Blocks.field_150460_al);
-        func_151180_a(astatistic, Blocks.field_150439_ay, Blocks.field_150450_ax);
-        func_151180_a(astatistic, Blocks.field_150416_aS, Blocks.field_150413_aR);
-        func_151180_a(astatistic, Blocks.field_150455_bV, Blocks.field_150441_bU);
-        func_151180_a(astatistic, Blocks.field_150429_aA, Blocks.field_150437_az);
-        func_151180_a(astatistic, Blocks.field_150374_bv, Blocks.field_150379_bu);
-        func_151180_a(astatistic, Blocks.field_150334_T, Blocks.field_150333_U);
-        func_151180_a(astatistic, Blocks.field_150373_bw, Blocks.field_150376_bx);
-        func_151180_a(astatistic, Blocks.field_180388_cO, Blocks.field_180389_cP);
-        func_151180_a(astatistic, Blocks.field_150349_c, Blocks.field_150346_d);
-        func_151180_a(astatistic, Blocks.field_150458_ak, Blocks.field_150346_d);
+    private static void replaceAllSimilarBlocks(StatBase[] p_75924_0_, boolean useItemIds) {
+        mergeStatBases(p_75924_0_, Blocks.field_150355_j, Blocks.field_150358_i, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150353_l, Blocks.field_150356_k, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150428_aP, Blocks.field_150423_aK, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150470_am, Blocks.field_150460_al, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150439_ay, Blocks.field_150450_ax, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150416_aS, Blocks.field_150413_aR, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150455_bV, Blocks.field_150441_bU, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150429_aA, Blocks.field_150437_az, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150374_bv, Blocks.field_150379_bu, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150334_T, Blocks.field_150333_U, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150373_bw, Blocks.field_150376_bx, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_180388_cO, Blocks.field_180389_cP, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150349_c, Blocks.field_150346_d, useItemIds);
+        mergeStatBases(p_75924_0_, Blocks.field_150458_ak, Blocks.field_150346_d, useItemIds);
     }
 
-    private static void func_151180_a(StatBase[] astatistic, Block block, Block block1) {
-        int i = Block.func_149682_b(block);
-        int j = Block.func_149682_b(block1);
+    private static void mergeStatBases(StatBase[] astatistic, Block block, Block block1, boolean useItemIds) {
+        int i;
+        int j;
+        if (useItemIds) {
+            i = Item.func_150891_b(Item.func_150898_a(block));
+            j = Item.func_150891_b(Item.func_150898_a(block1));
+        } else {
+            i = Block.func_149682_b(block);
+            j = Block.func_149682_b(block1);
+        }
 
         if (astatistic[i] != null && astatistic[j] == null) {
             astatistic[j] = astatistic[i];
@@ -297,5 +304,36 @@ public class StatList {
     @Nullable
     public static StatBase func_151177_a(String s) {
         return (StatBase) StatList.field_188093_a.get(s);
+    }
+    
+    @Deprecated //MODDER DO NOT CALL THIS ITS JUST A EVENT CALLBACK FOR FORGE
+    public static void reinit() {
+        field_188093_a.clear();
+        field_188094_c.clear();
+        field_188095_d.clear();
+        field_188096_e.clear();
+
+        for (StatBase[] sb : new StatBase[][]{field_188065_ae,  field_188066_af, field_75929_E, field_75930_F, field_188067_ai, field_188068_aj})
+        {
+            for (int x = 0; x < sb.length; x++)
+            {
+                if (sb[x] != null)
+                {
+                    field_75940_b.remove(sb[x]);
+                    sb[x] = null;
+                }
+            }
+        }
+        List<StatBase> unknown = Lists.newArrayList(field_75940_b);
+        field_75940_b.clear();
+
+        for (StatBase b : unknown)
+            b.func_75971_g();
+
+        func_151181_c();
+        func_75925_c();
+        func_151179_e();
+        func_75918_d();
+        func_188054_f();
     }
 }

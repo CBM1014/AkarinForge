@@ -40,8 +40,16 @@ public class RecipeBook {
         this.field_194078_b.clear(i);
     }
 
+    @Deprecated //DO NOT USE
     protected static int func_194075_d(@Nullable IRecipe irecipe) {
-        return CraftingManager.field_193380_a.func_148757_b(irecipe);
+        int ret = CraftingManager.field_193380_a.func_148757_b(irecipe);
+        if (ret == -1)
+        {
+            ret = ((net.minecraftforge.registries.ForgeRegistry<IRecipe>) net.minecraftforge.fml.common.registry.ForgeRegistries.RECIPES).getID(irecipe.getRegistryName());
+            if (ret == -1)
+                throw new IllegalArgumentException(String.format("Attempted to get the ID for a unknown recipe: %s Name: %s", irecipe, irecipe.getRegistryName()));
+        }
+        return ret;
     }
 
     public void func_194074_f(IRecipe irecipe) {
