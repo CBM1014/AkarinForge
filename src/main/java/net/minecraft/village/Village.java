@@ -28,7 +28,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 
-public class Village {
+public class Village implements net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound> {
 
     private World field_75586_a;
     private final List<VillageDoorInfo> field_75584_b = Lists.newArrayList();
@@ -39,7 +39,7 @@ public class Village {
     private int field_75581_g;
     private int field_75588_h;
     private int field_82694_i;
-    private final Map<String, Integer> field_82693_j;
+    private final Map<UUID, Integer> field_82693_j = Maps.<UUID, Integer>newHashMap();
     private final List<Village.VillageAggressor> field_75589_i;
     private int field_75587_j;
 
@@ -48,6 +48,7 @@ public class Village {
         this.field_75582_d = BlockPos.field_177992_a;
         this.field_82693_j = Maps.newHashMap();
         this.field_75589_i = Lists.newArrayList();
+        this.capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities(this);
     }
 
     public Village(World world) {
@@ -56,6 +57,7 @@ public class Village {
         this.field_82693_j = Maps.newHashMap();
         this.field_75589_i = Lists.newArrayList();
         this.field_75586_a = world;
+        this.capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities(this);
     }
 
     public void func_82691_a(World world) {
@@ -284,13 +286,13 @@ public class Village {
     public EntityPlayer func_82685_c(EntityLivingBase entityliving) {
         double d0 = Double.MAX_VALUE;
         EntityPlayer entityhuman = null;
-        Iterator iterator = this.field_82693_j.keySet().iterator();
+        Iterator<UUID> iterator = this.field_82693_j.keySet().iterator();
 
         while (iterator.hasNext()) {
-            String s = (String) iterator.next();
+            UUID s = (String) iterator.next();
 
-            if (this.func_82687_d(s)) {
-                EntityPlayer entityhuman1 = this.field_75586_a.func_72924_a(s);
+            if (this.isPlayerReputationTooLow(s)) {
+                EntityPlayer entityhuman1 = this.field_75586_a.func_152378_a(s);
 
                 if (entityhuman1 != null) {
                     double d1 = entityhuman1.func_70068_e(entityliving);
@@ -331,6 +333,7 @@ public class Village {
                 villagedoor.func_75466_d();
             }
 
+            if (field_75586_a.func_175667_e(villagedoor.func_179852_d())) // Forge: check that the door block is loaded to avoid loading chunks
             if (!this.func_179860_f(villagedoor.func_179852_d()) || Math.abs(this.field_75581_g - villagedoor.func_75473_b()) > 1200) {
                 this.field_75585_c = this.field_75585_c.func_177973_b(villagedoor.func_179852_d());
                 flag = true;
@@ -372,22 +375,45 @@ public class Village {
         }
     }
 
+    @Deprecated //Hasn't worked since 1.9, use UUID version below.
     public int func_82684_a(String s) {
+        return this.getPlayerReputation(findUUID(s));
+    }
+
+    public int getPlayerReputation(UUID s)
+    {
         Integer integer = (Integer) this.field_82693_j.get(s);
 
         return integer == null ? 0 : integer.intValue();
     }
+    
+    private UUID findUUID(String name) {
+        if (this.field_75586_a == null || this.field_75586_a.func_73046_m() == null)
+            return EntityPlayer.func_175147_b(name);
+        GameProfile profile = this.field_75586_a.func_73046_m().func_152358_ax().func_152655_a(name);
+        return profile == null ? EntityPlayer.func_175147_b(name) : profile.getId();
+    }
 
+    @Deprecated //Hasn't worked since 1.9, use UUID version below.
     public int func_82688_a(String s, int i) {
-        int j = this.func_82684_a(s);
+        return this.modifyPlayerReputation(findUUID(s), i);
+    }
+
+    public int modifyPlayerReputation(UUID s, int i) {
+        int j = this.getPlayerReputation(s);
         int k = MathHelper.func_76125_a(j + i, -30, 10);
 
         this.field_82693_j.put(s, Integer.valueOf(k));
         return k;
     }
 
+    @Deprecated //Hasn't worked since 1.9, use UUID version below.
     public boolean func_82687_d(String s) {
-        return this.func_82684_a(s) <= -15;
+        return this.isPlayerReputationTooLow(findUUID(s));
+    }
+    
+    public boolean isPlayerReputationTooLow(UUID uuid) {
+        return this.getPlayerReputation(uuid) <= -15;
     }
 
     public void func_82690_a(NBTTagCompound nbttagcompound) {
@@ -413,18 +439,15 @@ public class Village {
         for (int j = 0; j < nbttaglist1.func_74745_c(); ++j) {
             NBTTagCompound nbttagcompound2 = nbttaglist1.func_150305_b(j);
 
-            if (nbttagcompound2.func_74764_b("UUID") && this.field_75586_a != null && this.field_75586_a.func_73046_m() != null) {
-                PlayerProfileCache usercache = this.field_75586_a.func_73046_m().func_152358_ax();
-                GameProfile gameprofile = usercache.func_152652_a(UUID.fromString(nbttagcompound2.func_74779_i("UUID")));
-
-                if (gameprofile != null) {
-                    this.field_82693_j.put(gameprofile.getName(), Integer.valueOf(nbttagcompound2.func_74762_e("S")));
-                }
+            if (nbttagcompound2.func_74764_b("UUID")) {
+                this.field_82693_j.put(UUID.fromString(nbttagcompound2.func_74779_i("UUID")), Integer.valueOf(nbttagcompound2.func_74762_e("S")));
             } else {
-                this.field_82693_j.put(nbttagcompound2.func_74779_i("Name"), Integer.valueOf(nbttagcompound2.func_74762_e("S")));
+                // World is never set here, so this will always be offline UUIDs, sadly there is no way to convert this.
+                this.field_82693_j.put(findUUID(nbttagcompound2.func_74779_i("Name")), Integer.valueOf(nbttagcompound2.func_74762_e("S")));
             }
         }
 
+        if (this.capabilities != null && nbttagcompound.func_74764_b("ForgeCaps")) this.capabilities.deserializeNBT(nbttagcompound.func_74775_l("ForgeCaps"));
     }
 
     public void func_82689_b(NBTTagCompound nbttagcompound) {
@@ -458,27 +481,23 @@ public class Village {
 
         nbttagcompound.func_74782_a("Doors", nbttaglist);
         NBTTagList nbttaglist1 = new NBTTagList();
-        Iterator iterator1 = this.field_82693_j.keySet().iterator();
+        Iterator<UUID> iterator1 = this.field_82693_j.keySet().iterator();
 
         while (iterator1.hasNext()) {
-            String s = (String) iterator1.next();
+            UUID s = iterator1.next();
             NBTTagCompound nbttagcompound2 = new NBTTagCompound();
-            PlayerProfileCache usercache = this.field_75586_a.func_73046_m().func_152358_ax();
 
             try {
-                GameProfile gameprofile = usercache.func_152655_a(s);
-
-                if (gameprofile != null) {
-                    nbttagcompound2.func_74778_a("UUID", gameprofile.getId().toString());
-                    nbttagcompound2.func_74768_a("S", ((Integer) this.field_82693_j.get(s)).intValue());
-                    nbttaglist1.func_74742_a(nbttagcompound2);
-                }
+                nbttagcompound2.func_74778_a("UUID", s.toString());
+                nbttagcompound2.func_74768_a("S", ((Integer) this.field_82693_j.get(s)).intValue());
+                nbttaglist1.func_74742_a(nbttagcompound2);
             } catch (RuntimeException runtimeexception) {
                 ;
             }
         }
 
         nbttagcompound.func_74782_a("Players", nbttaglist1);
+        if (this.capabilities != null) nbttagcompound.func_74782_a("ForgeCaps", this.capabilities.serializeNBT());
     }
 
     public void func_82692_h() {
@@ -490,12 +509,12 @@ public class Village {
     }
 
     public void func_82683_b(int i) {
-        Iterator iterator = this.field_82693_j.keySet().iterator();
+        Iterator<UUID> iterator = this.field_82693_j.keySet().iterator();
 
         while (iterator.hasNext()) {
-            String s = (String) iterator.next();
+            UUID s = iterator.next();
 
-            this.func_82688_a(s, i);
+            this.modifyPlayerReputation(s, i);
         }
 
     }
@@ -510,4 +529,31 @@ public class Village {
             this.field_75590_b = i;
         }
     }
+    
+    /* ======================================== FORGE START =====================================*/
+    private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
+    public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.EnumFacing facing)
+    {
+        return capabilities == null ? false : capabilities.hasCapability(capability, facing);
+    }
+
+    @Nullable
+    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.util.EnumFacing facing)
+    {
+        return capabilities == null ? null : capabilities.getCapability(capability, facing);
+    }
+
+    public void deserializeNBT(NBTTagCompound nbt)
+    {
+        this.func_82690_a(nbt);;
+    }
+
+    public NBTTagCompound serializeNBT()
+    {
+        NBTTagCompound ret = new NBTTagCompound();
+        this.func_82689_b(ret);
+        return ret;
+    }
+
+    /* ========================================= FORGE END ======================================*/
 }

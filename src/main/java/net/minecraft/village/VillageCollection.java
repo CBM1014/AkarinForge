@@ -139,6 +139,7 @@ public class VillageCollection extends WorldSavedData {
     }
 
     private void func_180609_b(BlockPos blockposition) {
+        if (!this.field_75556_a.func_175697_a(blockposition, 16)) return; // Forge: prevent loading unloaded chunks when checking for doors
         boolean flag = true;
         boolean flag1 = true;
         boolean flag2 = true;
