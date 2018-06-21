@@ -21,7 +21,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 
-public class BlockCactus extends Block {
+public class BlockCactus extends Block implements net.minecraftforge.common.IPlantable { // Akarin Forge
 
     public static final PropertyInteger field_176587_a = PropertyInteger.func_177719_a("age", 0, 15);
     protected static final AxisAlignedBB field_185593_b = new AxisAlignedBB(0.0625D, 0.0D, 0.0625D, 0.9375D, 0.9375D, 0.9375D);
@@ -35,6 +35,7 @@ public class BlockCactus extends Block {
     }
 
     public void func_180650_b(World world, BlockPos blockposition, IBlockState iblockdata, Random random) {
+        if (!world.func_175697_a(blockposition, 1)) return; // Forge: prevent growing cactus from loading unloaded chunks with block update // Akarin Forge
         BlockPos blockposition1 = blockposition.func_177984_a();
 
         if (world.func_175623_d(blockposition1)) {
@@ -47,16 +48,21 @@ public class BlockCactus extends Block {
             if (i < world.paperConfig.cactusMaxHeight) { // Paper - Configurable growth height
                 int j = ((Integer) iblockdata.func_177229_b(BlockCactus.field_176587_a)).intValue();
 
-                if (j >= (byte) range(3, ((100.0F / world.spigotConfig.cactusModifier) * 15) + 0.5F, 15)) { // Spigot
-                    // world.setTypeUpdate(blockposition1, this.getBlockData()); // CraftBukkit
-                    IBlockState iblockdata1 = iblockdata.func_177226_a(BlockCactus.field_176587_a, Integer.valueOf(0));
+                // Akarin Forge - start
+                if(net.minecraftforge.common.ForgeHooks.onCropsGrowPre(world, blockposition1, iblockdata, true)) {
+                    if (j >= (byte) range(3, ((100.0F / world.spigotConfig.cactusModifier) * 15) + 0.5F, 15)) { // Spigot
+                        // world.setTypeUpdate(blockposition1, this.getBlockData()); // CraftBukkit
+                        IBlockState iblockdata1 = iblockdata.func_177226_a(BlockCactus.field_176587_a, Integer.valueOf(0));
 
-                    CraftEventFactory.handleBlockGrowEvent(world, blockposition1.func_177958_n(), blockposition1.func_177956_o(), blockposition1.func_177952_p(), this, 0); // CraftBukkit
-                    world.func_180501_a(blockposition, iblockdata1, 4);
-                    iblockdata1.func_189546_a(world, blockposition1, this, blockposition);
-                } else {
-                    world.func_180501_a(blockposition, iblockdata.func_177226_a(BlockCactus.field_176587_a, Integer.valueOf(j + 1)), 4);
+                        CraftEventFactory.handleBlockGrowEvent(world, blockposition1.func_177958_n(), blockposition1.func_177956_o(), blockposition1.func_177952_p(), this, 0); // CraftBukkit
+                        world.func_180501_a(blockposition, iblockdata1, 4);
+                        iblockdata1.func_189546_a(world, blockposition1, this, blockposition);
+                    } else {
+                        world.func_180501_a(blockposition, iblockdata.func_177226_a(BlockCactus.field_176587_a, Integer.valueOf(j + 1)), 4);
+                    }
+                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(world, blockposition, iblockdata, world.func_180495_p(blockposition));
                 }
+                // Akarin Forge - end
 
             }
         }
@@ -92,9 +98,12 @@ public class BlockCactus extends Block {
 
         do {
             if (!iterator.hasNext()) {
-                Block block = world.func_180495_p(blockposition.func_177977_b()).func_177230_c();
-
-                return block == Blocks.field_150434_aF || block == Blocks.field_150354_m && !world.func_180495_p(blockposition.func_177984_a()).func_185904_a().func_76224_d();
+                // Akarin Forge - start
+                // Block block = world.func_180495_p(blockposition.func_177977_b()).func_177230_c();
+                // return block == Blocks.field_150434_aF || block == Blocks.field_150354_m && !world.func_180495_p(blockposition.func_177984_a()).func_185904_a().func_76224_d();
+                IBlockState state = world.func_180495_p(blockposition.func_177977_b());
+                return state.func_177230_c().canSustainPlant(state, world, blockposition.func_177977_b(), EnumFacing.UP, this) && !world.func_180495_p(blockposition.func_177984_a()).func_185904_a().func_76224_d();
+                // Akarin Forge - end
             }
 
             EnumFacing enumdirection = (EnumFacing) iterator.next();
@@ -126,4 +135,16 @@ public class BlockCactus extends Block {
     public BlockFaceShape func_193383_a(IBlockAccess iblockaccess, IBlockState iblockdata, BlockPos blockposition, EnumFacing enumdirection) {
         return BlockFaceShape.UNDEFINED;
     }
+    
+    // Akarin Forge - start
+    @Override
+    public net.minecraftforge.common.EnumPlantType getPlantType(net.minecraft.world.IBlockAccess world, BlockPos pos) {
+        return net.minecraftforge.common.EnumPlantType.Desert;
+    }
+    
+    @Override
+    public IBlockState getPlant(net.minecraft.world.IBlockAccess world, BlockPos pos) {
+        return func_176223_P();
+    }
+    // Akarin Forge - end
 }
