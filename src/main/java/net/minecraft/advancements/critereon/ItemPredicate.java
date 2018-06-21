@@ -81,6 +81,14 @@ public class ItemPredicate {
     public static ItemPredicate func_192492_a(@Nullable JsonElement jsonelement) {
         if (jsonelement != null && !jsonelement.isJsonNull()) {
             JsonObject jsonobject = JsonUtils.func_151210_l(jsonelement, "item");
+            // Akarin Forge - start
+            if (jsonobject.has("type")) {
+                 final ResourceLocation rl = new ResourceLocation(JsonUtils.func_151200_h(jsonobject, "type"));
+                 final Map<ResourceLocation, java.util.function.Function<JsonObject, ItemPredicate>> map = net.minecraftforge.advancements.critereon.ItemPredicates.getPredicates();
+                 if (map.containsKey(rl)) return map.get(rl).apply(jsonobject);
+                 else throw new JsonSyntaxException("There is no ItemPredicate of type "+rl);
+            }
+            // Akarin Forge - end
             MinMaxBounds criterionconditionvalue = MinMaxBounds.func_192515_a(jsonobject.get("count"));
             MinMaxBounds criterionconditionvalue1 = MinMaxBounds.func_192515_a(jsonobject.get("durability"));
             Integer integer = jsonobject.has("data") ? Integer.valueOf(JsonUtils.func_151203_m(jsonobject, "data")) : null;
