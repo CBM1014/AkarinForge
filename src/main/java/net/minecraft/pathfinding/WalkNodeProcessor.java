@@ -348,7 +348,7 @@ public class WalkNodeProcessor extends NodeProcessor {
 
                         if (block == Blocks.field_150434_aF) {
                             pathtype = PathNodeType.DANGER_CACTUS;
-                        } else if (block == Blocks.field_150480_ab) {
+                        } else if (block == Blocks.field_150480_ab || block.isBurning(iblockaccess, blockposition_pooledblockposition)) {
                             pathtype = PathNodeType.DANGER_FIRE;
                         }
                     }
@@ -365,6 +365,9 @@ public class WalkNodeProcessor extends NodeProcessor {
         IBlockState iblockdata = iblockaccess.func_180495_p(blockposition);
         Block block = iblockdata.func_177230_c();
         Material material = iblockdata.func_185904_a();
+        
+        PathNodeType type = block.getAiPathNodeType(iblockdata, iblockaccess, blockposition);
+        if (type != null) return type;
 
         return material == Material.field_151579_a ? PathNodeType.OPEN : (block != Blocks.field_150415_aT && block != Blocks.field_180400_cw && block != Blocks.field_150392_bi ? (block == Blocks.field_150480_ab ? PathNodeType.DAMAGE_FIRE : (block == Blocks.field_150434_aF ? PathNodeType.DAMAGE_CACTUS : (block instanceof BlockDoor && material == Material.field_151575_d && !((Boolean) iblockdata.func_177229_b(BlockDoor.field_176519_b)).booleanValue() ? PathNodeType.DOOR_WOOD_CLOSED : (block instanceof BlockDoor && material == Material.field_151573_f && !((Boolean) iblockdata.func_177229_b(BlockDoor.field_176519_b)).booleanValue() ? PathNodeType.DOOR_IRON_CLOSED : (block instanceof BlockDoor && ((Boolean) iblockdata.func_177229_b(BlockDoor.field_176519_b)).booleanValue() ? PathNodeType.DOOR_OPEN : (block instanceof BlockRailBase ? PathNodeType.RAIL : (!(block instanceof BlockFence) && !(block instanceof BlockWall) && (!(block instanceof BlockFenceGate) || ((Boolean) iblockdata.func_177229_b(BlockFenceGate.field_176466_a)).booleanValue()) ? (material == Material.field_151586_h ? PathNodeType.WATER : (material == Material.field_151587_i ? PathNodeType.LAVA : (block.func_176205_b(iblockaccess, blockposition) ? PathNodeType.OPEN : PathNodeType.BLOCKED))) : PathNodeType.FENCE))))))) : PathNodeType.TRAPDOOR);
     }
