@@ -12,6 +12,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -63,17 +64,20 @@ public class BlockCrops extends BlockBush implements IGrowable {
 
     public void func_180650_b(World world, BlockPos blockposition, IBlockState iblockdata, Random random) {
         super.func_180650_b(world, blockposition, iblockdata, random);
+        
+        if (!world.func_175697_a(blockposition, 1)) return; // Forge: prevent loading unloaded chunks when checking neighbor's light // Akarin Forge
         if (world.isLightLevel(blockposition.func_177984_a(), 9)) { // Paper
             int i = this.func_185527_x(iblockdata);
 
             if (i < this.func_185526_g()) {
                 float f = func_180672_a((Block) this, world, blockposition);
 
-                if (random.nextInt((int) ((100.0F / world.spigotConfig.wheatModifier) * (25.0F / f)) + 1) == 0) { // Spigot
+                if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(world, blockposition, iblockdata, random.nextInt((int) ((100.0F / world.spigotConfig.wheatModifier) * (25.0F / f)) + 1)) == 0) { // Spigot // Akarin Forge
                     // CraftBukkit start
                     IBlockState data = this.func_185528_e(i + 1);
                     CraftEventFactory.handleBlockGrowEvent(world, blockposition.func_177958_n(), blockposition.func_177956_o(), blockposition.func_177952_p(), this, func_176201_c(data));
                     // CraftBukkit end
+                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(world, blockposition, iblockdata, world.func_180495_p(blockposition)); // Akarin Forge
                 }
             }
         }
@@ -107,9 +111,13 @@ public class BlockCrops extends BlockBush implements IGrowable {
                 float f1 = 0.0F;
                 IBlockState iblockdata = world.func_180495_p(blockposition1.func_177982_a(i, 0, j));
 
-                if (iblockdata.func_177230_c() == Blocks.field_150458_ak) {
+                // Akarin Forge - start
+                // if (iblockdata.func_177230_c() == Blocks.field_150458_ak) {
+                if (iblockdata.func_177230_c().canSustainPlant(iblockdata, world, blockposition1.func_177982_a(i, 0, j), EnumFacing.UP, (net.minecraftforge.common.IPlantable) block)) {
                     f1 = 1.0F;
-                    if (((Integer) iblockdata.func_177229_b(BlockFarmland.field_176531_a)).intValue() > 0) {
+                    // if (((Integer) iblockdata.func_177229_b(BlockFarmland.field_176531_a)).intValue() > 0) {
+                    if (iblockdata.func_177230_c().isFertile(world, blockposition1.func_177982_a(i, 0, j))) {
+                    // Akarin Forge - end
                         f1 = 3.0F;
                     }
                 }
@@ -142,8 +150,12 @@ public class BlockCrops extends BlockBush implements IGrowable {
         return f;
     }
 
-    public boolean func_180671_f(World world, BlockPos blockposition, IBlockState iblockdata) {
-        return (world.func_175699_k(blockposition) >= 8 || world.func_175678_i(blockposition)) && this.func_185514_i(world.func_180495_p(blockposition.func_177977_b()));
+    // Akarin Forge - start
+    public boolean func_180671_f(World p_180671_1_, BlockPos p_180671_2_, IBlockState p_180671_3_) {
+        // return (world.func_175699_k(blockposition) >= 8 || world.func_175678_i(blockposition)) && this.func_185514_i(world.func_180495_p(blockposition.func_177977_b()));
+        IBlockState soil = p_180671_1_.func_180495_p(p_180671_2_.func_177977_b());
+        return (p_180671_1_.func_175699_k(p_180671_2_) >= 8 || p_180671_1_.func_175678_i(p_180671_2_)) && soil.func_177230_c().canSustainPlant(soil, p_180671_1_, p_180671_2_.func_177977_b(), net.minecraft.util.EnumFacing.UP, this);
+        // Akarin Forge - end
     }
 
     protected Item func_149866_i() {
@@ -155,8 +167,8 @@ public class BlockCrops extends BlockBush implements IGrowable {
     }
 
     public void func_180653_a(World world, BlockPos blockposition, IBlockState iblockdata, float f, int i) {
-        super.func_180653_a(world, blockposition, iblockdata, f, 0);
-        if (!world.field_72995_K) {
+        super.func_180653_a(world, blockposition, iblockdata, f, 0, i); // Akarin Forge
+        if (false && !world.field_72995_K) { // Forge: NOP all this. // Akarin Forge
             int j = this.func_185527_x(iblockdata);
 
             if (j >= this.func_185526_g()) {
@@ -203,4 +215,26 @@ public class BlockCrops extends BlockBush implements IGrowable {
     protected BlockStateContainer func_180661_e() {
         return new BlockStateContainer(this, new IProperty[] { BlockCrops.field_176488_a});
     }
+    
+    // Akarin Forge - start
+    @Override
+    public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops, net.minecraft.world.IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+        super.getDrops(drops, world, pos, state, 0);
+        int age = func_185527_x(state);
+        Random rand = world instanceof World ? ((World)world).field_73012_v : new Random();
+
+        if (age >= func_185526_g())
+        {
+            int k = 3 + fortune;
+
+            for (int i = 0; i < 3 + fortune; ++i)
+            {
+                if (rand.nextInt(2 * func_185526_g()) <= age)
+                {
+                    drops.add(new ItemStack(this.func_149866_i(), 1, 0));
+                }
+            }
+        }
+    }
+    // Akarin Forge - end
 }
