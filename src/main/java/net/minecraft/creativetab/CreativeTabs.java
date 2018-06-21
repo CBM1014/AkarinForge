@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 
 public abstract class CreativeTabs {
 
-    public static final CreativeTabs[] field_78032_a = new CreativeTabs[12];
+    public static CreativeTabs[] field_78032_a = new CreativeTabs[12];
     public static final CreativeTabs field_78030_b = new CreativeTabs(0, "buildingBlocks") {
     };
     public static final CreativeTabs field_78031_c = new CreativeTabs(1, "decorations") {
@@ -40,8 +40,20 @@ public abstract class CreativeTabs {
     private boolean field_78041_r = true;
     private EnumEnchantmentType[] field_111230_s = new EnumEnchantmentType[0];
     private ItemStack field_151245_t;
+    
+    public CreativeTabs(String label) {
+        this(getNextID(), label);
+    }
 
     public CreativeTabs(int i, String s) {
+        if (i >= field_78032_a.length) {
+            CreativeTabs[] tmp = new CreativeTabs[i + 1];
+            for (int x = 0; x < field_78032_a.length; x++)
+            {
+                tmp[x] = field_78032_a[x];
+            }
+            field_78032_a = tmp;
+        }
         this.field_78033_n = i;
         this.field_78034_o = s;
         this.field_151245_t = ItemStack.field_190927_a;
@@ -87,5 +99,40 @@ public abstract class CreativeTabs {
         }
 
         return false;
+    }
+    
+    public int getTabPage()
+    {
+        if (field_78033_n > 11)
+        {
+            return ((field_78033_n - 12) / 10) + 1;
+        }
+        return 0;
+    }
+
+    public static int getNextID()
+    {
+        return field_78032_a.length;
+    }
+
+    /**
+     * Determines if the search bar should be shown for this tab.
+     *
+     * @return True to show the bar
+     */
+    public boolean hasSearchBar()
+    {
+        return field_78033_n == CreativeTabs.field_78027_g.field_78033_n;
+    }
+
+    /**
+     * Gets the width of the search bar of the creative tab, use this if your
+     * creative tab name overflows together with a custom texture.
+     *
+     * @return The width of the search bar, 89 by default
+     */
+    public int getSearchbarWidth()
+    {
+        return 89;
     }
 }

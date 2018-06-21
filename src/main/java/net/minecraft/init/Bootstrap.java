@@ -415,6 +415,9 @@ public class Bootstrap {
 
         BlockDispenser.field_149943_a.func_82595_a(Items.field_151129_at, dispensebehavioritem);
         BlockDispenser.field_149943_a.func_82595_a(Items.field_151131_as, dispensebehavioritem);
+        BlockDispenser.field_149943_a.func_82595_a(Items.field_151117_aB, net.minecraftforge.fluids.DispenseFluidContainer.getInstance());
+        BlockDispenser.field_149943_a.func_82595_a(Items.field_151133_ar, net.minecraftforge.fluids.DispenseFluidContainer.getInstance());
+        if (false)
         BlockDispenser.field_149943_a.func_82595_a(Items.field_151133_ar, new BehaviorDefaultDispenseItem() {
             private final BehaviorDefaultDispenseItem b = new BehaviorDefaultDispenseItem();
 
@@ -772,6 +775,7 @@ public class Bootstrap {
     public static void func_151354_b() {
         if (!Bootstrap.field_151355_a) {
             Bootstrap.field_151355_a = true;
+            if (false) // skip redirectOutputToLog, Forge already redirects stdout and stderr output to log so that they print with more context
             func_179868_d();
             SoundEvent.func_187504_b();
             Block.func_149671_p();
@@ -802,6 +806,7 @@ public class Bootstrap {
                 }
             }
 
+            net.minecraftforge.registries.GameData.vanillaSnapshot();
         }
     }
 

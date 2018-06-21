@@ -105,8 +105,11 @@ public class CrashReportCategory {
         if (astacktraceelement.length <= 0) {
             return 0;
         } else {
-            this.field_85075_d = new StackTraceElement[astacktraceelement.length - 3 - i];
-            System.arraycopy(astacktraceelement, 3 + i, this.field_85075_d, 0, this.field_85075_d.length);
+            int len = astacktraceelement.length - 3 - i;
+            // Really Mojang, Still, god damn...
+            if (len <= 0) len = astacktraceelement.length;
+            this.field_85075_d = new StackTraceElement[len];
+            System.arraycopy(astacktraceelement, astacktraceelement.length - len, this.field_85075_d, 0, this.field_85075_d.length);
             return this.field_85075_d.length;
         }
     }

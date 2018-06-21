@@ -129,6 +129,7 @@ public class CrashReport {
             }
         });
         this.field_85061_c.func_189529_a("CraftBukkit Information", (ICrashReportDetail) new org.bukkit.craftbukkit.CraftCrashReport()); // CraftBukkit
+        net.minecraftforge.fml.common.FMLCommonHandler.instance().enhanceCrashReport(this, this.field_85061_c);
     }
 
     public String func_71501_a() {
@@ -209,6 +210,8 @@ public class CrashReport {
         StringBuilder stringbuilder = new StringBuilder();
 
         stringbuilder.append("---- Minecraft Crash Report ----\n");
+        net.minecraftforge.fml.common.asm.transformers.BlamingTransformer.onCrash(stringbuilder);
+        net.minecraftforge.fml.relauncher.CoreModManager.onCrash(stringbuilder);
         stringbuilder.append("// ");
         stringbuilder.append(func_71503_h());
         stringbuilder.append("\n\n");
