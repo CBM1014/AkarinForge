@@ -51,11 +51,14 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class Block {
+public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<Block> { // Akarin Forge
 
     private static final ResourceLocation field_176230_a = new ResourceLocation("air");
-    public static final RegistryNamespacedDefaultedByKey<ResourceLocation, Block> field_149771_c = new RegistryNamespacedDefaultedByKey(Block.field_176230_a);
-    public static final ObjectIntIdentityMap<IBlockState> field_176229_d = new ObjectIntIdentityMap();
+    // Akarin Forge - start
+    public static final RegistryNamespacedDefaultedByKey<ResourceLocation, Block> field_149771_c = net.minecraftforge.registries.GameData.getWrapperDefaulted(Block.class);
+    @Deprecated //Modders: DO NOT use this! Use GameRegistry
+    public static final ObjectIntIdentityMap<IBlockState> field_176229_d = net.minecraftforge.registries.GameData.getBlockStateIDMap();
+    // Akarin Forge - end
     public static final AxisAlignedBB field_185505_j = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
     @Nullable
     public static final AxisAlignedBB field_185506_k = null;
@@ -74,6 +77,7 @@ public class Block {
     public float field_149763_I;
     protected final Material field_149764_J;
     protected final MapColor field_181083_K;
+    @Deprecated // Forge: State/world/pos/entity sensitive version below // Akarin Forge
     public float field_149765_K;
     protected final BlockStateContainer field_176227_L;
     private IBlockState field_176228_M;
@@ -271,8 +275,8 @@ public class Block {
         return EnumBlockRenderType.MODEL;
     }
 
-    public boolean func_176200_f(IBlockAccess iblockaccess, BlockPos blockposition) {
-        return false;
+    public boolean func_176200_f(IBlockAccess p_176200_1_, BlockPos p_176200_2_) { // Akarin Forge
+        return p_176200_1_.func_180495_p(p_176200_2_).func_185904_a().func_76222_j(); // Akarin Forge
     }
 
     protected Block func_149711_c(float f) {
@@ -303,8 +307,9 @@ public class Block {
         return this.field_149789_z;
     }
 
+    @Deprecated //Forge: New State sensitive version. // Akarin Forge
     public boolean func_149716_u() {
-        return this.field_149758_A;
+        return hasTileEntity(func_176223_P()); // Akarin Forge
     }
 
     @Deprecated
@@ -371,8 +376,13 @@ public class Block {
         org.spigotmc.AsyncCatcher.catchOp( "block onPlace"); // Spigot
     }
 
-    public void func_180663_b(World world, BlockPos blockposition, IBlockState iblockdata) {
+    public void func_180663_b(World p_180663_1_, BlockPos p_180663_2_, IBlockState p_180663_3_) { // Akarin Forge
         org.spigotmc.AsyncCatcher.catchOp( "block remove"); // Spigot
+        // Akarin Forge - start
+        if (hasTileEntity(p_180663_3_) && !(this instanceof BlockContainer)) {
+            p_180663_1_.func_175713_t(p_180663_2_);
+        }
+        // Akarin Forge - end
     }
 
     public int func_149745_a(Random random) {
@@ -384,10 +394,8 @@ public class Block {
     }
 
     @Deprecated
-    public float func_180647_a(IBlockState iblockdata, EntityPlayer entityhuman, World world, BlockPos blockposition) {
-        float f = iblockdata.func_185887_b(world, blockposition);
-
-        return f < 0.0F ? 0.0F : (!entityhuman.func_184823_b(iblockdata) ? entityhuman.func_184813_a(iblockdata) / f / 100.0F : entityhuman.func_184813_a(iblockdata) / f / 30.0F);
+    public float func_180647_a(IBlockState p_180647_1_, EntityPlayer p_180647_2_, World p_180647_3_, BlockPos p_180647_4_) { // Akarin Forge
+        return net.minecraftforge.common.ForgeHooks.blockStrength(p_180647_1_, p_180647_2_, p_180647_3_, p_180647_4_); // Akarin Forge
     }
 
     public final void func_176226_b(World world, BlockPos blockposition, IBlockState iblockdata, int i) {
@@ -395,17 +403,24 @@ public class Block {
     }
 
     public void func_180653_a(World world, BlockPos blockposition, IBlockState iblockdata, float f, int i) {
-        if (!world.field_72995_K) {
-            int j = this.func_149679_a(i, world.field_73012_v);
+        if (!world.field_72995_K && !world.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe // Akarin Forge
+            // Akarin Forge - start
+            // int j = this.func_149679_a(i, world.field_73012_v);
+            List<ItemStack> drops = getDrops(world, blockposition, iblockdata, i); // use the old method until it gets removed, for backward compatibility
+            f = net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, blockposition, iblockdata, i, f, false, harvesters.get());
+            // Akarin Forge - end
 
-            for (int k = 0; k < j; ++k) {
+            for (ItemStack drop : drops) { // Akarin Forge
                 // CraftBukkit - <= to < to allow for plugins to completely disable block drops from explosions
                 if (world.field_73012_v.nextFloat() < f) {
-                    Item item = this.func_180660_a(iblockdata, world.field_73012_v, i);
+                    // Akarin Forge - start
+                    /* Item item = this.func_180660_a(iblockdata, world.field_73012_v, i);
 
                     if (item != Items.field_190931_a) {
                         func_180635_a(world, blockposition, new ItemStack(item, 1, this.func_180651_a(iblockdata)));
-                    }
+                    } */
+                    func_180635_a(world, blockposition, drop);
+                    // Akarin Forge - end
                 }
             }
 
@@ -413,7 +428,13 @@ public class Block {
     }
 
     public static void func_180635_a(World world, BlockPos blockposition, ItemStack itemstack) {
-        if (!world.field_72995_K && !itemstack.func_190926_b() && world.func_82736_K().func_82766_b("doTileDrops")) {
+        if (!world.field_72995_K && !itemstack.func_190926_b() && world.func_82736_K().func_82766_b("doTileDrops") && !world.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe // Akarin Forge
+            // Akarin Forge - start
+            if (captureDrops.get()) {
+                capturedDrops.get().add(p_180635_2_);
+                return;
+            }
+            // Akarin Forge - end
             float f = 0.5F;
             double d0 = world.field_73012_v.nextFloat() * 0.5F + 0.25D;
             double d1 = world.field_73012_v.nextFloat() * 0.5F + 0.25D;
@@ -447,6 +468,7 @@ public class Block {
         return 0;
     }
 
+    @Deprecated //Forge: State sensitive version // Akarin Forge
     public float func_149638_a(Entity entity) {
         return this.field_149781_w / 5.0F;
     }
@@ -473,7 +495,7 @@ public class Block {
     }
 
     public boolean func_176196_c(World world, BlockPos blockposition) {
-        return world.func_180495_p(blockposition).func_177230_c().field_149764_J.func_76222_j();
+        return world.func_180495_p(blockposition).func_177230_c().func_176200_f(world, blockposition); // Akarin Forge
     }
 
     public boolean func_180639_a(World world, BlockPos blockposition, IBlockState iblockdata, EntityPlayer entityhuman, EnumHand enumhand, EnumFacing enumdirection, float f, float f1, float f2) {
@@ -482,6 +504,7 @@ public class Block {
 
     public void func_176199_a(World world, BlockPos blockposition, Entity entity) {}
 
+    @Deprecated // Forge: use getStateForPlacement // Akarin Forge
     public IBlockState func_180642_a(World world, BlockPos blockposition, EnumFacing enumdirection, float f, float f1, float f2, int i, EntityLivingBase entityliving) {
         return this.func_176203_a(i);
     }
@@ -512,20 +535,31 @@ public class Block {
     public void func_180657_a(World world, EntityPlayer entityhuman, BlockPos blockposition, IBlockState iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
         entityhuman.func_71029_a(StatList.func_188055_a(this));
         entityhuman.func_71020_j(0.005F);
-        if (this.func_149700_E() && EnchantmentHelper.func_77506_a(Enchantments.field_185306_r, itemstack) > 0) {
+        // Akarin Forge - start
+        if (this.canSilkHarvest(world, blockposition, iblockdata, entityhuman) && EnchantmentHelper.func_77506_a(Enchantments.field_185306_r, itemstack) > 0) {
+        // if (this.func_149700_E() && EnchantmentHelper.func_77506_a(Enchantments.field_185306_r, itemstack) > 0) {
+            List<ItemStack> items = new java.util.ArrayList<ItemStack>();
             ItemStack itemstack1 = this.func_180643_i(iblockdata);
 
-            func_180635_a(world, blockposition, itemstack1);
+            // func_180635_a(world, blockposition, itemstack1);
+            if (!itemstack.func_190926_b()) items.add(itemstack);
+
+            net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(items, world, blockposition, iblockdata, 0, 1.0f, true, entityhuman);
+            for (ItemStack item : items) func_180635_a(world, blockposition, item);
         } else {
+            harvesters.set(entityhuman);
             int i = EnchantmentHelper.func_77506_a(Enchantments.field_185308_t, itemstack);
 
             this.func_176226_b(world, blockposition, iblockdata, i);
+            harvesters.set(null);
         }
+        // Akarin Forge - end
 
     }
 
+    @Deprecated //Forge: State sensitive version // Akarin Forge
     protected boolean func_149700_E() {
-        return this.func_176223_P().func_185917_h() && !this.field_149758_A;
+        return this.func_176223_P().func_185917_h() && !this.hasTileEntity(silk_check_state.get()); // Akarin Forge
     }
 
     protected ItemStack func_180643_i(IBlockState iblockdata) {
@@ -589,6 +623,7 @@ public class Block {
         entity.field_70181_x = 0.0D;
     }
 
+    @Deprecated // Forge: Use more sensitive version below: getPickBlock // Akarin Forge
     public ItemStack func_185473_a(World world, BlockPos blockposition, IBlockState iblockdata) {
         return new ItemStack(Item.func_150898_a(this), 1, this.func_180651_a(iblockdata));
     }
@@ -669,6 +704,7 @@ public class Block {
         }
     }
 
+    @Deprecated // Forge - World/state/pos/entity sensitive version below // Akarin Forge
     public SoundType func_185467_w() {
         return this.field_149762_H;
     }
@@ -860,7 +896,10 @@ public class Block {
 
         func_176219_a(155, "quartz_block", block11);
         func_176219_a(156, "quartz_stairs", (new BlockStairs(block11.func_176223_P().func_177226_a(BlockQuartz.field_176335_a, BlockQuartz.EnumType.DEFAULT))).func_149663_c("stairsQuartz"));
-        func_176219_a(157, "activator_rail", (new BlockRailPowered()).func_149711_c(0.7F).func_149672_a(SoundType.field_185852_e).func_149663_c("activatorRail"));
+        // Akarin Forge - start
+        // func_176219_a(157, "activator_rail", (new BlockRailPowered()).func_149711_c(0.7F).func_149672_a(SoundType.field_185852_e).func_149663_c("activatorRail"));
+        func_176219_a(157, "activator_rail", (new BlockRailPowered(true)).func_149711_c(0.7F).func_149672_a(SoundType.field_185852_e).func_149663_c("activatorRail"));
+        // Akarin Forge - end
         func_176219_a(158, "dropper", (new BlockDropper()).func_149711_c(3.5F).func_149672_a(SoundType.field_185851_d).func_149663_c("dropper"));
         func_176219_a(159, "stained_hardened_clay", (new BlockStainedHardenedClay()).func_149711_c(1.25F).func_149752_b(7.0F).func_149672_a(SoundType.field_185851_d).func_149663_c("clayHardenedStained"));
         func_176219_a(160, "stained_glass_pane", (new BlockStainedGlassPane()).func_149711_c(0.3F).func_149672_a(SoundType.field_185853_f).func_149663_c("thinStainedGlass"));
@@ -987,7 +1026,8 @@ public class Block {
             }
         }
 
-        HashSet hashset = Sets.newHashSet(new Block[] { Block.field_149771_c.func_82594_a(new ResourceLocation("tripwire"))});
+        // Akarin Forge - start
+        /* HashSet hashset = Sets.newHashSet(new Block[] { Block.field_149771_c.func_82594_a(new ResourceLocation("tripwire"))});
         Iterator iterator1 = Block.field_149771_c.iterator();
 
         while (iterator1.hasNext()) {
@@ -1009,7 +1049,8 @@ public class Block {
                     Block.field_176229_d.func_148746_a(iblockdata, k);
                 }
             }
-        }
+        } */
+        // Akarin Forge - end
 
     }
 
@@ -1045,4 +1086,1273 @@ public class Block {
 
         private EnumOffsetType() {}
     }
+    
+    // Akarin Forge - start
+    /* ======================================== FORGE START =====================================*/
+    // For ForgeInternal use Only!
+    protected ThreadLocal<EntityPlayer> harvesters = new ThreadLocal();
+    private ThreadLocal<IBlockState> silk_check_state = new ThreadLocal();
+    protected static java.util.Random RANDOM = new java.util.Random(); // Useful for random things without a seed.
+    
+    /**
+     * Gets the slipperiness at the given location at the given state. Normally
+     * between 0 and 1.
+     * <p>
+     * Note that entities may reduce slipperiness by a certain factor of their own;
+     * for {@link net.minecraft.entity.EntityLivingBase}, this is {@code .91}.
+     * {@link net.minecraft.entity.item.EntityItem} uses {@code .98}, and
+     * {@link net.minecraft.entity.projectile.EntityFishHook} uses {@code .92}.
+     *
+     * @param state state of the block
+     * @param world the world
+     * @param pos the position in the world
+     * @param entity the entity in question
+     * @return the factor by which the entity's motion should be multiplied
+     */
+    public float getSlipperiness(IBlockState state, IBlockAccess world, BlockPos pos, @Nullable Entity entity)
+    {
+        return field_149765_K;
+    }
+    
+    /**
+     * Sets the base slipperiness level. Normally between 0 and 1.
+     * <p>
+     * <b>Calling this method may have no effect on the function of this block</b>,
+     * or may not have the expected result. This block is free to caclculate
+     * its slipperiness arbitrarily. This method is guaranteed to work on the
+     * base {@code Block} class.
+     *
+     * @param slipperiness the base slipperiness of this block
+     * @see #getSlipperiness(IBlockState, IBlockAccess, BlockPos, Entity)
+     */
+    public void setDefaultSlipperiness(float slipperiness)
+    {
+        this.field_149765_K = slipperiness;
+    }
+    
+    /**
+     * Get a light value for this block, taking into account the given state and coordinates, normal ranges are between 0 and 15
+     *
+     * @param state Block state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return The light value
+     */
+    public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return state.func_185906_d();
+    }
+    
+    /**
+     * Checks if a player or entity can use this block to 'climb' like a ladder.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param entity The entity trying to use the ladder, CAN be null.
+     * @return True if the block should act like a ladder
+     */
+    public boolean isLadder(IBlockState state, IBlockAccess world, BlockPos pos, EntityLivingBase entity) { return false; }
+    
+    /**
+     * Return true if the block is a normal, solid cube.  This
+     * determines indirect power state, entity ejection from blocks, and a few
+     * others.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return True if the block is a full cube
+     */
+    public boolean isNormalCube(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return state.func_185915_l();
+    }
+    
+    /**
+     * Check if the face of a block should block rendering.
+     *
+     * Faces which are fully opaque should return true, faces with transparency
+     * or faces which do not span the full size of the block should return false.
+     *
+     * @param state The current block state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param face The side to check
+     * @return True if the block is opaque on the specified side.
+     */
+    public boolean doesSideBlockRendering(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing face)
+    {
+        return state.func_185914_p();
+    }
+    
+    /**
+     * Checks if the block is a solid face on the given side, used by placement logic.
+     *
+     * @param base_state The base state, getActualState should be called first
+     * @param world The current world
+     * @param pos Block position in world
+     * @param side The side to check
+     * @return True if the block is solid on the specified side.
+     */
+    @Deprecated //Use IBlockState.getBlockFaceShape
+    public boolean isSideSolid(IBlockState base_state, IBlockAccess world, BlockPos pos, EnumFacing side)
+    {
+        if (base_state.func_185896_q() && side == EnumFacing.UP) // Short circuit to vanilla function if its true
+            return true;
+        
+        if (this instanceof BlockSlab)
+        {
+            IBlockState state = this.func_176221_a(base_state, world, pos);
+            return base_state.func_185913_b()
+                    || (state.func_177229_b(BlockSlab.field_176554_a) == BlockSlab.EnumBlockHalf.TOP    && side == EnumFacing.UP  )
+                    || (state.func_177229_b(BlockSlab.field_176554_a) == BlockSlab.EnumBlockHalf.BOTTOM && side == EnumFacing.DOWN);
+        }
+        else if (this instanceof BlockFarmland)
+        {
+            return (side != EnumFacing.DOWN && side != EnumFacing.UP);
+        }
+        else if (this instanceof BlockStairs)
+        {
+            IBlockState state = this.func_176221_a(base_state, world, pos);
+            boolean flipped = state.func_177229_b(BlockStairs.field_176308_b) == BlockStairs.EnumHalf.TOP;
+            BlockStairs.EnumShape shape = (BlockStairs.EnumShape)state.func_177229_b(BlockStairs.field_176310_M);
+            EnumFacing facing = (EnumFacing)state.func_177229_b(BlockStairs.field_176309_a);
+            if (side == EnumFacing.UP) return flipped;
+            if (side == EnumFacing.DOWN) return !flipped;
+            if (facing == side) return true;
+            if (flipped)
+            {
+                if (shape == BlockStairs.EnumShape.INNER_LEFT ) return side == facing.func_176735_f();
+                if (shape == BlockStairs.EnumShape.INNER_RIGHT) return side == facing.func_176746_e();
+            }
+            else
+            {
+                if (shape == BlockStairs.EnumShape.INNER_LEFT ) return side == facing.func_176746_e();
+                if (shape == BlockStairs.EnumShape.INNER_RIGHT) return side == facing.func_176735_f();
+            }
+            return false;
+        }
+        else if (this instanceof BlockSnow)
+        {
+            IBlockState state = this.func_176221_a(base_state, world, pos);
+            return ((Integer)state.func_177229_b(BlockSnow.field_176315_a)) >= 8;
+        }
+        else if (this instanceof BlockHopper && side == EnumFacing.UP)
+        {
+            return true;
+        }
+        else if (this instanceof BlockCompressedPowered)
+        {
+            return true;
+        }
+        return isNormalCube(base_state, world, pos);
+    }
+    
+    /**
+     * Determines if this block should set fire and deal fire damage
+     * to entities coming into contact with it.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @return True if the block should deal damage
+     */
+    public boolean isBurning(IBlockAccess world, BlockPos pos)
+    {
+        return false;
+    }
+    
+    /**
+     * Determines this block should be treated as an air block
+     * by the rest of the code. This method is primarily
+     * useful for creating pure logic-blocks that will be invisible
+     * to the player and otherwise interact as air would.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return True if the block considered air
+     */
+    public boolean isAir(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return state.func_185904_a() == Material.field_151579_a;
+    }
+    
+    /**
+     * Determines if the player can harvest this block, obtaining it's drops when the block is destroyed.
+     *
+     * @param player The player damaging the block
+     * @param pos The block's current position
+     * @return True to spawn the drops
+     */
+    public boolean canHarvestBlock(IBlockAccess world, BlockPos pos, EntityPlayer player)
+    {
+        return net.minecraftforge.common.ForgeHooks.canHarvestBlock(this, player, world, pos);
+    }
+    
+    /**
+     * Called when a player removes a block.  This is responsible for
+     * actually destroying the block, and the block is intact at time of call.
+     * This is called regardless of whether the player can harvest the block or
+     * not.
+     *
+     * Return true if the block is actually destroyed.
+     *
+     * Note: When used in multiplayer, this is called on both client and
+     * server sides!
+     *
+     * @param state The current state.
+     * @param world The current world
+     * @param player The player damaging the block, may be null
+     * @param pos Block position in world
+     * @param willHarvest True if Block.harvestBlock will be called after this, if the return in true.
+     *        Can be useful to delay the destruction of tile entities till after harvestBlock
+     * @return True if the block is actually destroyed.
+     */
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player, boolean willHarvest)
+    {
+        this.func_176208_a(world, pos, state, player);
+        return world.func_180501_a(pos, net.minecraft.init.Blocks.field_150350_a.func_176223_P(), world.field_72995_K ? 11 : 3);
+    }
+    
+    /**
+     * Chance that fire will spread and consume this block.
+     * 300 being a 100% chance, 0, being a 0% chance.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param face The face that the fire is coming from
+     * @return A number ranging from 0 to 300 relating used to determine if the block will be consumed by fire
+     */
+    public int getFlammability(IBlockAccess world, BlockPos pos, EnumFacing face)
+    {
+        return net.minecraft.init.Blocks.field_150480_ab.func_176532_c(this);
+    }
+    
+    /**
+     * Called when fire is updating, checks if a block face can catch fire.
+     *
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param face The face that the fire is coming from
+     * @return True if the face can be on fire, false otherwise.
+     */
+    public boolean isFlammable(IBlockAccess world, BlockPos pos, EnumFacing face)
+    {
+        return getFlammability(world, pos, face) > 0;
+    }
+    
+    /**
+     * Called when fire is updating on a neighbor block.
+     * The higher the number returned, the faster fire will spread around this block.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param face The face that the fire is coming from
+     * @return A number that is used to determine the speed of fire growth around the block
+     */
+    public int getFireSpreadSpeed(IBlockAccess world, BlockPos pos, EnumFacing face)
+    {
+        return net.minecraft.init.Blocks.field_150480_ab.func_176534_d(this);
+    }
+    
+    /**
+     * Currently only called by fire when it is on top of this block.
+     * Returning true will prevent the fire from naturally dying during updating.
+     * Also prevents firing from dying from rain.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param side The face that the fire is coming from
+     * @return True if this block sustains fire, meaning it will never go out.
+     */
+    public boolean isFireSource(World world, BlockPos pos, EnumFacing side)
+    {
+        if (side != EnumFacing.UP)
+            return false;
+        if (this == Blocks.field_150424_aL || this == Blocks.field_189877_df)
+            return true;
+        if ((world.field_73011_w instanceof net.minecraft.world.WorldProviderEnd) && this == Blocks.field_150357_h)
+            return true;
+        return false;
+    }
+    
+    private boolean isTileProvider = this instanceof ITileEntityProvider;
+    /**
+     * Called throughout the code as a replacement for block instanceof BlockContainer
+     * Moving this to the Block base class allows for mods that wish to extend vanilla
+     * blocks, and also want to have a tile entity on that block, may.
+     *
+     * Return true from this function to specify this block has a tile entity.
+     *
+     * @param state State of the current block
+     * @return True if block has a tile entity, false otherwise
+     */
+    public boolean hasTileEntity(IBlockState state)
+    {
+        return isTileProvider;
+    }
+    
+    /**
+     * Called throughout the code as a replacement for ITileEntityProvider.createNewTileEntity
+     * Return the same thing you would from that function.
+     * This will fall back to ITileEntityProvider.createNewTileEntity(World) if this block is a ITileEntityProvider
+     *
+     * @param state The state of the current block
+     * @return A instance of a class extending TileEntity
+     */
+    @Nullable
+    public TileEntity createTileEntity(World world, IBlockState state)
+    {
+        if (isTileProvider)
+        {
+            return ((ITileEntityProvider)this).func_149915_a(world, func_176201_c(state));
+        }
+        return null;
+    }
+    
+    /**
+     * State and fortune sensitive version, this replaces the old (int meta, Random rand)
+     * version in 1.1.
+     *
+     * @param state Current state
+     * @param fortune Current item fortune level
+     * @param random Random number generator
+     * @return The number of items to drop
+     */
+    public int quantityDropped(IBlockState state, int fortune, Random random)
+    {
+        return func_149679_a(fortune, random);
+    }
+    
+    /**
+     * @deprecated use {@link #getDrops(NonNullList, IBlockAccess, BlockPos, IBlockState, int)}
+     */
+    @Deprecated
+    public List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, int fortune)
+    {
+        NonNullList<ItemStack> ret = NonNullList.func_191196_a();
+        getDrops(ret, world, pos, state, fortune);
+        return ret;
+    }
+    
+    /**
+     * This gets a complete list of items dropped from this block.
+     *
+     * @param drops add all items this block drops to this drops list
+     * @param world The current world
+     * @param pos Block position in world
+     * @param state Current state
+     * @param fortune Breakers fortune level
+     */
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune)
+    {
+        Random rand = world instanceof World ? ((World)world).field_73012_v : RANDOM;
+        
+        int count = quantityDropped(state, fortune, rand);
+        for (int i = 0; i < count; i++)
+        {
+            Item item = this.func_180660_a(state, rand, fortune);
+            if (item != Items.field_190931_a)
+            {
+                drops.add(new ItemStack(item, 1, this.func_180651_a(state)));
+            }
+        }
+    }
+    
+    /**
+     * Return true from this function if the player with silk touch can harvest this block directly, and not it's normal drops.
+     *
+     * @param world The world
+     * @param pos Block position in world
+     * @param state current block state
+     * @param player The player doing the harvesting
+     * @return True if the block can be directly harvested using silk touch
+     */
+    public boolean canSilkHarvest(World world, BlockPos pos, IBlockState state, EntityPlayer player)
+    {
+        silk_check_state.set(state);;
+        boolean ret = this.func_149700_E();
+        silk_check_state.set(null);
+        return ret;
+    }
+    
+    /**
+     * Determines if a specified mob type can spawn on this block, returning false will
+     * prevent any mob from spawning on the block.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param type The Mob Category Type
+     * @return True to allow a mob of the specified category to spawn, false to prevent it.
+     */
+    public boolean canCreatureSpawn(IBlockState state, IBlockAccess world, BlockPos pos, net.minecraft.entity.EntityLiving.SpawnPlacementType type)
+    {
+        return isSideSolid(state, world, pos, EnumFacing.UP);
+    }
+    
+    /**
+     * Determines if this block is classified as a Bed, Allowing
+     * players to sleep in it, though the block has to specifically
+     * perform the sleeping functionality in it's activated event.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param player The player or camera entity, null in some cases.
+     * @return True to treat this as a bed
+     */
+    public boolean isBed(IBlockState state, IBlockAccess world, BlockPos pos, @Nullable Entity player)
+    {
+        return this == net.minecraft.init.Blocks.field_150324_C;
+    }
+    
+    /**
+     * Returns the position that the player is moved to upon
+     * waking up, or respawning at the bed.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param player The player or camera entity, null in some cases.
+     * @return The spawn position
+     */
+    @Nullable
+    public BlockPos getBedSpawnPosition(IBlockState state, IBlockAccess world, BlockPos pos, @Nullable EntityPlayer player)
+    {
+        if (world instanceof World)
+            return BlockBed.func_176468_a((World)world, pos, 0);
+        return null;
+    }
+    
+    /**
+     * Called when a user either starts or stops sleeping in the bed.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param player The player or camera entity, null in some cases.
+     * @param occupied True if we are occupying the bed, or false if they are stopping use of the bed
+     */
+    public void setBedOccupied(IBlockAccess world, BlockPos pos, EntityPlayer player, boolean occupied)
+    {
+        if (world instanceof World)
+        {
+            IBlockState state = world.func_180495_p(pos);
+            state = state.func_177230_c().func_176221_a(state, world, pos);
+            state = state.func_177226_a(BlockBed.field_176471_b, occupied);
+            ((World)world).func_180501_a(pos, state, 4);
+        }
+    }
+    
+    /**
+     * Returns the direction of the block. Same values that
+     * are returned by BlockDirectional
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return Bed direction
+     */
+    public EnumFacing getBedDirection(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return (EnumFacing)func_176221_a(state, world, pos).func_177229_b(BlockHorizontal.field_185512_D);
+    }
+    
+    /**
+     * Determines if the current block is the foot half of the bed.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @return True if the current block is the foot side of a bed.
+     */
+    public boolean isBedFoot(IBlockAccess world, BlockPos pos)
+    {
+        return func_176221_a(world.func_180495_p(pos), world, pos).func_177229_b(BlockBed.field_176472_a) == BlockBed.EnumPartType.FOOT;
+    }
+    
+    /**
+     * Called when a leaf should start its decay process.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     */
+    public void beginLeavesDecay(IBlockState state, World world, BlockPos pos){}
+    
+    /**
+     * Determines if this block can prevent leaves connected to it from decaying.
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return true if the presence this block can prevent leaves from decaying.
+     */
+    public boolean canSustainLeaves(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return false;
+    }
+    
+    /**
+     * Determines if this block is considered a leaf block, used to apply the leaf decay and generation system.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return true if this block is considered leaves.
+     */
+    public boolean isLeaves(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return state.func_185904_a() == Material.field_151584_j;
+    }
+    
+    /**
+     * Used during tree growth to determine if newly generated leaves can replace this block.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return true if this block can be replaced by growing leaves.
+     */
+    public boolean canBeReplacedByLeaves(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return isAir(state, world, pos) || isLeaves(state, world, pos); //!state.isFullBlock();
+    }
+    
+    /**
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @return  true if the block is wood (logs)
+     */
+    public boolean isWood(IBlockAccess world, BlockPos pos)
+    {
+        return false;
+    }
+    
+    /**
+     * Determines if the current block is replaceable by Ore veins during world generation.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param target The generic target block the gen is looking for, Standards define stone
+     *      for overworld generation, and neatherack for the nether.
+     * @return True to allow this block to be replaced by a ore
+     */
+    public boolean isReplaceableOreGen(IBlockState state, IBlockAccess world, BlockPos pos, com.google.common.base.Predicate<IBlockState> target)
+    {
+        return target.apply(state);
+    }
+    
+    /**
+     * Location sensitive version of getExplosionResistance
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param exploder The entity that caused the explosion, can be null
+     * @param explosion The explosion
+     * @return The amount of the explosion absorbed.
+     */
+    public float getExplosionResistance(World world, BlockPos pos, @Nullable Entity exploder, Explosion explosion)
+    {
+        return func_149638_a(exploder);
+    }
+    
+    /**
+     * Called when the block is destroyed by an explosion.
+     * Useful for allowing the block to take into account tile entities,
+     * state, etc. when exploded, before it is removed.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param explosion The explosion instance affecting the block
+     */
+    public void onBlockExploded(World world, BlockPos pos, Explosion explosion)
+    {
+        world.func_175698_g(pos);
+        func_180652_a(world, pos, explosion);
+    }
+    
+    /**
+     * Determine if this block can make a redstone connection on the side provided,
+     * Useful to control which sides are inputs and outputs for redstone wires.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param side The side that is trying to make the connection, CAN BE NULL
+     * @return True to make the connection
+     */
+    public boolean canConnectRedstone(IBlockState state, IBlockAccess world, BlockPos pos, @Nullable EnumFacing side)
+    {
+        return state.func_185897_m() && side != null;
+    }
+    
+    /**
+     * Determines if a torch can be placed on the top surface of this block.
+     * Useful for creating your own block that torches can be on, such as fences.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return True to allow the torch to be placed
+     */
+    public boolean canPlaceTorchOnTop(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        if (state.func_185896_q() || state.func_193401_d(world, pos, EnumFacing.UP) == BlockFaceShape.SOLID)
+        {
+            return this != Blocks.field_185775_db && this != Blocks.field_150428_aP;
+        }
+        else
+        {
+            return this instanceof BlockFence || this == Blocks.field_150359_w || this == Blocks.field_150463_bK || this == Blocks.field_150399_cn;
+        }
+    }
+    
+    /**
+     * Called when a user uses the creative pick block button on this block
+     *
+     * @param target The full target the player is looking at
+     * @return A ItemStack to add to the player's inventory, empty itemstack if nothing should be added.
+     */
+    public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player)
+    {
+        return func_185473_a(world, pos, state);
+    }
+    
+    /**
+     * Used by getTopSolidOrLiquidBlock while placing biome decorations, villages, etc
+     * Also used to determine if the player can spawn on this block.
+     *
+     * @return False to disallow spawning
+     */
+    public boolean isFoliage(IBlockAccess world, BlockPos pos)
+    {
+        return false;
+    }
+    
+    /**
+     * Allows a block to override the standard EntityLivingBase.updateFallState
+     * particles, this is a server side method that spawns particles with
+     * WorldServer.spawnParticle
+     *
+     * @param world The current Server world
+     * @param blockPosition of the block that the entity landed on.
+     * @param iblockstate State at the specific world/pos
+     * @param entity the entity that hit landed on the block.
+     * @param numberOfParticles that vanilla would have spawned.
+     * @return True to prevent vanilla landing particles form spawning.
+     */
+    public boolean addLandingEffects(IBlockState state, net.minecraft.world.WorldServer worldObj, BlockPos blockPosition, IBlockState iblockstate, EntityLivingBase entity, int numberOfParticles )
+    {
+        return false;
+    }
+    
+    /**
+     * Allows a block to override the standard vanilla running particles.
+     * This is called from {@link Entity#spawnRunningParticles} and is called both,
+     * Client and server side, it's up to the implementor to client check / server check.
+     * By default vanilla spawns particles only on the client and the server methods no-op.
+     *
+     * @param state  The BlockState the entity is running on.
+     * @param world  The world.
+     * @param pos    The position at the entities feet.
+     * @param entity The entity running on the block.
+     * @return True to prevent vanilla running particles from spawning.
+     */
+    public boolean addRunningEffects(IBlockState state, World world, BlockPos pos, Entity entity)
+    {
+        return false;
+    }
+    
+    /**
+     * Determines if this block can support the passed in plant, allowing it to be planted and grow.
+     * Some examples:
+     *   Reeds check if its a reed, or if its sand/dirt/grass and adjacent to water
+     *   Cacti checks if its a cacti, or if its sand
+     *   Nether types check for soul sand
+     *   Crops check for tilled soil
+     *   Caves check if it's a solid surface
+     *   Plains check if its grass or dirt
+     *   Water check if its still water
+     *
+     * @param state The Current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @param direction The direction relative to the given position the plant wants to be, typically its UP
+     * @param plantable The plant that wants to check
+     * @return True to allow the plant to be planted/stay.
+     */
+    public boolean canSustainPlant(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing direction, net.minecraftforge.common.IPlantable plantable)
+    {
+        IBlockState plant = plantable.getPlant(world, pos.func_177972_a(direction));
+        net.minecraftforge.common.EnumPlantType plantType = plantable.getPlantType(world, pos.func_177972_a(direction));
+        
+        if (plant.func_177230_c() == net.minecraft.init.Blocks.field_150434_aF)
+        {
+            return this == net.minecraft.init.Blocks.field_150434_aF || this == net.minecraft.init.Blocks.field_150354_m;
+        }
+        
+        if (plant.func_177230_c() == net.minecraft.init.Blocks.field_150436_aH && this == net.minecraft.init.Blocks.field_150436_aH)
+        {
+            return true;
+        }
+        
+        if (plantable instanceof BlockBush && ((BlockBush)plantable).func_185514_i(state))
+        {
+            return true;
+        }
+        
+        switch (plantType)
+        {
+            case Desert: return this == net.minecraft.init.Blocks.field_150354_m || this == net.minecraft.init.Blocks.field_150405_ch || this == net.minecraft.init.Blocks.field_150406_ce;
+            case Nether: return this == net.minecraft.init.Blocks.field_150425_aM;
+            case Crop:   return this == net.minecraft.init.Blocks.field_150458_ak;
+            case Cave:   return state.isSideSolid(world, pos, EnumFacing.UP);
+            case Plains: return this == net.minecraft.init.Blocks.field_150349_c || this == net.minecraft.init.Blocks.field_150346_d || this == net.minecraft.init.Blocks.field_150458_ak;
+            case Water:  return state.func_185904_a() == Material.field_151586_h && state.func_177229_b(BlockLiquid.field_176367_b) == 0;
+            case Beach:
+                boolean isBeach = this == net.minecraft.init.Blocks.field_150349_c || this == net.minecraft.init.Blocks.field_150346_d || this == net.minecraft.init.Blocks.field_150354_m;
+                boolean hasWater = (world.func_180495_p(pos.func_177974_f()).func_185904_a() == Material.field_151586_h ||
+                        world.func_180495_p(pos.func_177976_e()).func_185904_a() == Material.field_151586_h ||
+                        world.func_180495_p(pos.func_177978_c()).func_185904_a() == Material.field_151586_h ||
+                        world.func_180495_p(pos.func_177968_d()).func_185904_a() == Material.field_151586_h);
+                return isBeach && hasWater;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Called when a plant grows on this block, only implemented for saplings using the WorldGen*Trees classes right now.
+     * Modder may implement this for custom plants.
+     * This does not use ForgeDirection, because large/huge trees can be located in non-representable direction,
+     * so the source location is specified.
+     * Currently this just changes the block to dirt if it was grass.
+     *
+     * Note: This happens DURING the generation, the generation may not be complete when this is called.
+     *
+     * @param state The current state
+     * @param world Current world
+     * @param pos Block position in world
+     * @param source Source plant's position in world
+     */
+    public void onPlantGrow(IBlockState state, World world, BlockPos pos, BlockPos source)
+    {
+        if (this == net.minecraft.init.Blocks.field_150349_c || this == net.minecraft.init.Blocks.field_150458_ak)
+        {
+            world.func_180501_a(pos, net.minecraft.init.Blocks.field_150346_d.func_176223_P(), 2);
+        }
+    }
+    
+    /**
+     * Checks if this soil is fertile, typically this means that growth rates
+     * of plants on this soil will be slightly sped up.
+     * Only vanilla case is tilledField when it is within range of water.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @return True if the soil should be considered fertile.
+     */
+    public boolean isFertile(World world, BlockPos pos)
+    {
+        if (this == net.minecraft.init.Blocks.field_150458_ak)
+        {
+            return ((Integer)world.func_180495_p(pos).func_177229_b(BlockFarmland.field_176531_a)) > 0;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Location aware and overrideable version of the lightOpacity array,
+     * return the number to subtract from the light value when it passes through this block.
+     *
+     * This is not guaranteed to have the tile entity in place before this is called, so it is
+     * Recommended that you have your tile entity call relight after being placed if you
+     * rely on it for light info.
+     *
+     * @param state The Block state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return The amount of light to block, 0 for air, 255 for fully opaque.
+     */
+    public int getLightOpacity(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return state.func_185891_c();
+    }
+    
+    /**
+     * Determines if this block is can be destroyed by the specified entities normal behavior.
+     *
+     * @param state The current state
+     * @param world The current world
+     * @param pos Block position in world
+     * @return True to allow the ender dragon to destroy this block
+     */
+    public boolean canEntityDestroy(IBlockState state, IBlockAccess world, BlockPos pos, Entity entity)
+    {
+        if (entity instanceof net.minecraft.entity.boss.EntityDragon)
+        {
+            return this != net.minecraft.init.Blocks.field_180401_cv &&
+                    this != net.minecraft.init.Blocks.field_150343_Z &&
+                    this != net.minecraft.init.Blocks.field_150377_bs &&
+                    this != net.minecraft.init.Blocks.field_150357_h &&
+                    this != net.minecraft.init.Blocks.field_150384_bq &&
+                    this != net.minecraft.init.Blocks.field_150378_br &&
+                    this != net.minecraft.init.Blocks.field_150483_bI &&
+                    this != net.minecraft.init.Blocks.field_185776_dc &&
+                    this != net.minecraft.init.Blocks.field_185777_dd &&
+                    this != net.minecraft.init.Blocks.field_150411_aY &&
+                    this != net.minecraft.init.Blocks.field_185775_db;
+        }
+        else if ((entity instanceof net.minecraft.entity.boss.EntityWither) ||
+                (entity instanceof net.minecraft.entity.projectile.EntityWitherSkull))
+        {
+            return net.minecraft.entity.boss.EntityWither.func_181033_a(this);
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Determines if this block can be used as the base of a beacon.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param beacon Beacon position in world
+     * @return True, to support the beacon, and make it active with this block.
+     */
+    public boolean isBeaconBase(IBlockAccess worldObj, BlockPos pos, BlockPos beacon)
+    {
+        return this == net.minecraft.init.Blocks.field_150475_bE || this == net.minecraft.init.Blocks.field_150340_R || this == net.minecraft.init.Blocks.field_150484_ah || this == net.minecraft.init.Blocks.field_150339_S;
+    }
+    
+    /**
+     * Rotate the block. For vanilla blocks this rotates around the axis passed in (generally, it should be the "face" that was hit).
+     * Note: for mod blocks, this is up to the block and modder to decide. It is not mandated that it be a rotation around the
+     * face, but could be a rotation to orient *to* that face, or a visiting of possible rotations.
+     * The method should return true if the rotation was successful though.
+     *
+     * @param world The world
+     * @param pos Block position in world
+     * @param axis The axis to rotate around
+     * @return True if the rotation was successful, False if the rotation failed, or is not possible
+     */
+    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis)
+    {
+        IBlockState state = world.func_180495_p(pos);
+        for (IProperty<?> prop : state.func_177228_b().keySet())
+        {
+            if ((prop.func_177701_a().equals("facing") || prop.func_177701_a().equals("rotation")) && prop.func_177699_b() == EnumFacing.class)
+            {
+                Block block = state.func_177230_c();
+                if (!(block instanceof BlockBed) && !(block instanceof BlockPistonExtension))
+                {
+                    IBlockState newState;
+                    //noinspection unchecked
+                    IProperty<EnumFacing> facingProperty = (IProperty<EnumFacing>) prop;
+                    EnumFacing facing = state.func_177229_b(facingProperty);
+                    java.util.Collection<EnumFacing> validFacings = facingProperty.func_177700_c();
+                    
+                    // rotate horizontal facings clockwise
+                    if (validFacings.size() == 4 && !validFacings.contains(EnumFacing.UP) && !validFacings.contains(EnumFacing.DOWN))
+                    {
+                        newState = state.func_177226_a(facingProperty, facing.func_176746_e());
+                    }
+                    else
+                    {
+                        // rotate other facings about the axis
+                        EnumFacing rotatedFacing = facing.func_176732_a(axis.func_176740_k());
+                        if (validFacings.contains(rotatedFacing))
+                        {
+                            newState = state.func_177226_a(facingProperty, rotatedFacing);
+                        }
+                        else // abnormal facing property, just cycle it
+                        {
+                            newState = state.func_177231_a(facingProperty);
+                        }
+                    }
+                    
+                    world.func_175656_a(pos, newState);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Get the rotations that can apply to the block at the specified coordinates. Null means no rotations are possible.
+     * Note, this is up to the block to decide. It may not be accurate or representative.
+     * @param world The world
+     * @param pos Block position in world
+     * @return An array of valid axes to rotate around, or null for none or unknown
+     */
+    @Nullable
+    public EnumFacing[] getValidRotations(World world, BlockPos pos)
+    {
+        IBlockState state = world.func_180495_p(pos);
+        for (IProperty<?> prop : state.func_177228_b().keySet())
+        {
+            if ((prop.func_177701_a().equals("facing") || prop.func_177701_a().equals("rotation")) && prop.func_177699_b() == EnumFacing.class)
+            {
+                @SuppressWarnings("unchecked")
+                java.util.Collection<EnumFacing> values = ((java.util.Collection<EnumFacing>)prop.func_177700_c());
+                return values.toArray(new EnumFacing[values.size()]);
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Determines the amount of enchanting power this block can provide to an enchanting table.
+     * @param world The World
+     * @param pos Block position in world
+     * @return The amount of enchanting power this block produces.
+     */
+    public float getEnchantPowerBonus(World world, BlockPos pos)
+    {
+        return this == net.minecraft.init.Blocks.field_150342_X ? 1 : 0;
+    }
+    
+    /**
+     * Common way to recolor a block with an external tool
+     * @param world The world
+     * @param pos Block position in world
+     * @param side The side hit with the coloring tool
+     * @param color The color to change to
+     * @return If the recoloring was successful
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public boolean recolorBlock(World world, BlockPos pos, EnumFacing side, net.minecraft.item.EnumDyeColor color)
+    {
+        IBlockState state = world.func_180495_p(pos);
+        for (IProperty prop : state.func_177228_b().keySet())
+        {
+            if (prop.func_177701_a().equals("color") && prop.func_177699_b() == net.minecraft.item.EnumDyeColor.class)
+            {
+                net.minecraft.item.EnumDyeColor current = (net.minecraft.item.EnumDyeColor)state.func_177229_b(prop);
+                if (current != color && prop.func_177700_c().contains(color))
+                {
+                    world.func_175656_a(pos, state.func_177226_a(prop, color));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Gathers how much experience this block drops when broken.
+     *
+     * @param state The current state
+     * @param world The world
+     * @param pos Block position
+     * @param fortune
+     * @return Amount of XP from breaking this block.
+     */
+    public int getExpDrop(IBlockState state, IBlockAccess world, BlockPos pos, int fortune)
+    {
+        return 0;
+    }
+    
+    /**
+     * Called when a tile entity on a side of this block changes is created or is destroyed.
+     * @param world The world
+     * @param pos Block position in world
+     * @param neighbor Block position of neighbor
+     */
+    public void onNeighborChange(IBlockAccess world, BlockPos pos, BlockPos neighbor){}
+    
+    /**
+     * Called on an Observer block whenever an update for an Observer is received.
+     *
+     * @param observerState The Observer block's state.
+     * @param world The current world.
+     * @param observerPos The Observer block's position.
+     * @param changedBlock The updated block.
+     * @param changedBlockPos The updated block's position.
+     */
+    public void observedNeighborChange(IBlockState observerState, World world, BlockPos observerPos, Block changedBlock, BlockPos changedBlockPos){}
+    
+    /**
+     * Called to determine whether to allow the a block to handle its own indirect power rather than using the default rules.
+     * @param world The world
+     * @param pos Block position in world
+     * @param side The INPUT side of the block to be powered - ie the opposite of this block's output side
+     * @return Whether Block#isProvidingWeakPower should be called when determining indirect power
+     */
+    public boolean shouldCheckWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side)
+    {
+        return state.func_185915_l();
+    }
+    
+    /**
+     * If this block should be notified of weak changes.
+     * Weak changes are changes 1 block away through a solid block.
+     * Similar to comparators.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @return true To be notified of changes
+     */
+    public boolean getWeakChanges(IBlockAccess world, BlockPos pos)
+    {
+        return false;
+    }
+    
+    private String[] harvestTool = new String[16];;
+    private int[] harvestLevel = new int[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    /**
+     * Sets or removes the tool and level required to harvest this block.
+     *
+     * @param toolClass Class
+     * @param level Harvest level:
+     *     Wood:    0
+     *     Stone:   1
+     *     Iron:    2
+     *     Diamond: 3
+     *     Gold:    0
+     */
+    public void setHarvestLevel(String toolClass, int level)
+    {
+        java.util.Iterator<IBlockState> itr = func_176194_O().func_177619_a().iterator();
+        while (itr.hasNext())
+        {
+            setHarvestLevel(toolClass, level, itr.next());
+        }
+    }
+    
+    /**
+     * Sets or removes the tool and level required to harvest this block.
+     *
+     * @param toolClass Class
+     * @param level Harvest level:
+     *     Wood:    0
+     *     Stone:   1
+     *     Iron:    2
+     *     Diamond: 3
+     *     Gold:    0
+     * @param state The specific state.
+     */
+    public void setHarvestLevel(String toolClass, int level, IBlockState state)
+    {
+        int idx = this.func_176201_c(state);
+        this.harvestTool[idx] = toolClass;
+        this.harvestLevel[idx] = level;
+    }
+    
+    /**
+     * Queries the class of tool required to harvest this block, if null is returned
+     * we assume that anything can harvest this block.
+     */
+    @Nullable public String getHarvestTool(IBlockState state)
+    {
+        return harvestTool[func_176201_c(state)];
+    }
+    
+    /**
+     * Queries the harvest level of this item stack for the specified tool class,
+     * Returns -1 if this tool is not of the specified type
+     *
+     * @return Harvest level, or -1 if not the specified tool type.
+     */
+    public int getHarvestLevel(IBlockState state)
+    {
+        return harvestLevel[func_176201_c(state)];
+    }
+    
+    /**
+     * Checks if the specified tool type is efficient on this block,
+     * meaning that it digs at full speed.
+     */
+    public boolean isToolEffective(String type, IBlockState state)
+    {
+        if ("pickaxe".equals(type) && (this == net.minecraft.init.Blocks.field_150450_ax || this == net.minecraft.init.Blocks.field_150439_ay || this == net.minecraft.init.Blocks.field_150343_Z))
+            return false;
+        return type != null && type.equals(getHarvestTool(state));
+    }
+    
+    /**
+     * Can return IExtendedBlockState
+     */
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return state;
+    }
+    
+    /**
+     * Called when the entity is inside this block, may be used to determined if the entity can breathing,
+     * display material overlays, or if the entity can swim inside a block.
+     *
+     * @param world that is being tested.
+     * @param blockpos position thats being tested.
+     * @param iblockstate state at world/blockpos
+     * @param entity that is being tested.
+     * @param yToTest, primarily for testingHead, which sends the the eye level of the entity, other wise it sends a y that can be tested vs liquid height.
+     * @param materialIn to test for.
+     * @param testingHead when true, its testing the entities head for vision, breathing ect... otherwise its testing the body, for swimming and movement adjustment.
+     * @return null for default behavior, true if the entity is within the material, false if it was not.
+     */
+    @Nullable
+    public Boolean isEntityInsideMaterial(IBlockAccess world, BlockPos blockpos, IBlockState iblockstate, Entity entity, double yToTest, Material materialIn, boolean testingHead)
+    {
+        return null;
+    }
+    
+    /**
+     * Called when boats or fishing hooks are inside the block to check if they are inside
+     * the material requested.
+     *
+     * @param world world that is being tested.
+     * @param pos block thats being tested.
+     * @param boundingBox box to test, generally the bounds of an entity that are besting tested.
+     * @param materialIn to check for.
+     * @return null for default behavior, true if the box is within the material, false if it was not.
+     */
+    @Nullable
+    public Boolean isAABBInsideMaterial(World world, BlockPos pos, AxisAlignedBB boundingBox, Material materialIn)
+    {
+        return null;
+    }
+    
+    /**
+     * Called when entities are moving to check if they are inside a liquid
+     *
+     * @param world world that is being tested.
+     * @param pos block thats being tested.
+     * @param boundingBox box to test, generally the bounds of an entity that are besting tested.
+     * @return null for default behavior, true if the box is within the material, false if it was not.
+     */
+    @Nullable
+    public Boolean isAABBInsideLiquid(World world, BlockPos pos, AxisAlignedBB boundingBox)
+    {
+        return null;
+    }
+    
+    /**
+     * Queries if this block should render in a given layer.
+     * ISmartBlockModel can use {@link net.minecraftforge.client.MinecraftForgeClient#getRenderLayer()} to alter their model based on layer.
+     */
+    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer)
+    {
+        return func_180664_k() == layer;
+    }
+    // For Internal use only to capture droped items inside getDrops
+    protected static ThreadLocal<Boolean> captureDrops = ThreadLocal.withInitial(() -> false);
+    protected static ThreadLocal<NonNullList<ItemStack>> capturedDrops = ThreadLocal.withInitial(NonNullList::func_191196_a);
+    protected NonNullList<ItemStack> captureDrops(boolean start)
+    {
+        if (start)
+        {
+            captureDrops.set(true);
+            capturedDrops.get().clear();
+            return NonNullList.func_191196_a();
+        }
+        else
+        {
+            captureDrops.set(false);
+            return capturedDrops.get();
+        }
+    }
+    
+    /**
+     * Sensitive version of getSoundType
+     * @param state The state
+     * @param world The world
+     * @param pos The position. Note that the world may not necessarily have {@code state} here!
+     * @param entity The entity that is breaking/stepping on/placing/hitting/falling on this block, or null if no entity is in this context
+     * @return A SoundType to use
+     */
+    public SoundType getSoundType(IBlockState state, World world, BlockPos pos, @Nullable Entity entity)
+    {
+        return func_185467_w();
+    }
+    
+    /**
+     * @param state The state
+     * @param world The world
+     * @param pos The position of this state
+     * @param beaconPos The position of the beacon
+     * @return A float RGB [0.0, 1.0] array to be averaged with a beacon's existing beam color, or null to do nothing to the beam
+     */
+    @Nullable
+    public float[] getBeaconColorMultiplier(IBlockState state, World world, BlockPos pos, BlockPos beaconPos)
+    {
+        return null;
+    }
+    
+    /**
+     * Gets the {@link IBlockState} to place
+     * @param world The world the block is being placed in
+     * @param pos The position the block is being placed at
+     * @param facing The side the block is being placed on
+     * @param hitX The X coordinate of the hit vector
+     * @param hitY The Y coordinate of the hit vector
+     * @param hitZ The Z coordinate of the hit vector
+     * @param meta The metadata of {@link ItemStack} as processed by {@link Item#getMetadata(int)}
+     * @param placer The entity placing the block
+     * @param hand The player hand used to place this block
+     * @return The state to be placed in the world
+     */
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand)
+    {
+        return func_180642_a(world, pos, facing, hitX, hitY, hitZ, meta, placer);
+    }
+    
+    /**
+     * Determines if another block can connect to this block
+     *
+     * @param world The current world
+     * @param pos The position of this block
+     * @param facing The side the connecting block is on
+     * @return True to allow another block to connect to this block
+     */
+    public boolean canBeConnectedTo(IBlockAccess world, BlockPos pos, EnumFacing facing)
+    {
+        return false;
+    }
+    
+    /**
+     * Get the {@code PathNodeType} for this block. Return {@code null} for vanilla behavior.
+     *
+     * @return the PathNodeType
+     */
+    @Nullable
+    public net.minecraft.pathfinding.PathNodeType getAiPathNodeType(IBlockState state, IBlockAccess world, BlockPos pos)
+    {
+        return isBurning(world, pos) ? net.minecraft.pathfinding.PathNodeType.DAMAGE_FIRE : null;
+    }
+    
+    /**
+     * @param blockState The state for this block
+     * @param world The world this block is in
+     * @param pos The position of this block
+     * @param side The side of this block that the chest lid is trying to open into
+     * @return true if the chest should be prevented from opening by this block
+     */
+    public boolean doesSideBlockChestOpening(IBlockState blockState, IBlockAccess world, BlockPos pos, EnumFacing side)
+    {
+        ResourceLocation registryName = this.getRegistryName();
+        if (registryName != null && "minecraft".equals(registryName.func_110624_b()))
+        {
+            // maintain the vanilla behavior of https://bugs.mojang.com/browse/MC-378
+            return isNormalCube(blockState, world, pos);
+        }
+        return isSideSolid(blockState, world, pos, side);
+    }
+    
+    /**
+     * @param state The state
+     * @return true if the block is sticky block which used for pull or push adjacent blocks (use by piston)
+     */
+    public boolean isStickyBlock(IBlockState state)
+    {
+        return state.func_177230_c() == Blocks.field_180399_cE;
+    }
+    
+    /* ========================================= FORGE END ======================================*/
+    // Akarin Forge - end
 }

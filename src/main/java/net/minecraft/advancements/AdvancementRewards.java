@@ -49,7 +49,7 @@ public class AdvancementRewards {
 
     public void func_192113_a(final EntityPlayerMP entityplayer) {
         entityplayer.func_71023_q(this.field_192115_b);
-        LootContext loottableinfo = (new LootContext.Builder(entityplayer.func_71121_q())).func_186472_a((Entity) entityplayer).func_186471_a();
+        LootContext loottableinfo = (new LootContext.Builder(entityplayer.func_71121_q())).func_186472_a((Entity) entityplayer).func_186470_a(entityplayer).func_186469_a(entityplayer.func_184817_da()).func_186471_a(); // Forge: add player & luck to LootContext // Akarin Forge
         
         boolean flag = false;
         ResourceLocation[] aminecraftkey = this.field_192116_c;

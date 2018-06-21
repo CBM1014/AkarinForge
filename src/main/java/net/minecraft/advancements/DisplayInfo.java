@@ -86,7 +86,12 @@ public class DisplayInfo {
             Item item = JsonUtils.func_188180_i(jsonobject, "item");
             int i = JsonUtils.func_151208_a(jsonobject, "data", 0);
 
-            return new ItemStack(item, 1, i);
+            // Akarin Forge - start
+            // return new ItemStack(item, 1, i);
+            ItemStack ret = new ItemStack(item, 1, i);
+            ret.func_77982_d(net.minecraftforge.common.util.JsonUtils.readNBT(jsonobject, "nbt"));
+            return ret;
+            // Akarin Forge - end
         }
     }
 
