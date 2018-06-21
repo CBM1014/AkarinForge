@@ -74,7 +74,12 @@ public class BlockBed extends BlockHorizontal implements ITileEntityProvider {
                 }
             }
 
-            if (world.field_73011_w.func_76567_e() && world.func_180494_b(blockposition) != Biomes.field_76778_j) {
+            // Akarin Forge - start
+            // if (world.field_73011_w.func_76567_e() && world.func_180494_b(blockposition) != Biomes.field_76778_j) {
+            net.minecraft.world.WorldProvider.WorldSleepResult sleepResult = world.field_73011_w.canSleepAt(entityhuman, blockposition);
+            if (sleepResult != net.minecraft.world.WorldProvider.WorldSleepResult.BED_EXPLODES) {
+                if (sleepResult == net.minecraft.world.WorldProvider.WorldSleepResult.DENY) return true;
+                // Akarin Forge - end
                 if (((Boolean) iblockdata.func_177229_b(BlockBed.field_176471_b)).booleanValue()) {
                     EntityPlayer entityhuman1 = this.func_176470_e(world, blockposition);
 
