@@ -15,7 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockBush extends Block {
+public class BlockBush extends Block implements net.minecraftforge.common.IPlantable { // Akarin Forge
 
     protected static final AxisAlignedBB field_185515_b = new AxisAlignedBB(0.30000001192092896D, 0.0D, 0.30000001192092896D, 0.699999988079071D, 0.6000000238418579D, 0.699999988079071D);
 
@@ -33,8 +33,12 @@ public class BlockBush extends Block {
         this.func_149647_a(CreativeTabs.field_78031_c);
     }
 
-    public boolean func_176196_c(World world, BlockPos blockposition) {
-        return super.func_176196_c(world, blockposition) && this.func_185514_i(world.func_180495_p(blockposition.func_177977_b()));
+    // Akarin Forge - start
+    public boolean func_176196_c(World p_176196_1_, BlockPos p_176196_2_) {
+        // return super.func_176196_c(world, blockposition) && this.func_185514_i(world.func_180495_p(blockposition.func_177977_b()));
+        IBlockState soil = p_176196_1_.func_180495_p(p_176196_2_.func_177977_b());
+        return super.func_176196_c(p_176196_1_, p_176196_2_) && soil.func_177230_c().canSustainPlant(soil, p_176196_1_, p_176196_2_.func_177977_b(), EnumFacing.UP, this);
+        // Akarin Forge - end
     }
 
     protected boolean func_185514_i(IBlockState iblockdata) {
@@ -64,6 +68,12 @@ public class BlockBush extends Block {
     }
 
     public boolean func_180671_f(World world, BlockPos blockposition, IBlockState iblockdata) {
+        // Akarin Forge - start
+        if (iblockdata.func_177230_c() == this) { // Forge: This function is called during world gen and placement, before this block is set, so if we are not 'here' then assume it's the pre-check.
+            IBlockState soil = world.func_180495_p(blockposition.func_177977_b());
+            return soil.func_177230_c().canSustainPlant(soil, world, blockposition.func_177977_b(), net.minecraft.util.EnumFacing.UP, this);
+        }
+        // Akarin Forge - end
         return this.func_185514_i(world.func_180495_p(blockposition.func_177977_b()));
     }
 
@@ -87,4 +97,36 @@ public class BlockBush extends Block {
     public BlockFaceShape func_193383_a(IBlockAccess iblockaccess, IBlockState iblockdata, BlockPos blockposition, EnumFacing enumdirection) {
         return BlockFaceShape.UNDEFINED;
     }
+    
+    // Akarin Forge - start
+    @Override
+    public net.minecraftforge.common.EnumPlantType getPlantType(net.minecraft.world.IBlockAccess world, BlockPos pos)
+    {
+        if (this == Blocks.field_150464_aj)          return net.minecraftforge.common.EnumPlantType.Crop;
+        if (this == Blocks.field_150459_bM)        return net.minecraftforge.common.EnumPlantType.Crop;
+        if (this == Blocks.field_150469_bN)       return net.minecraftforge.common.EnumPlantType.Crop;
+        if (this == Blocks.field_185773_cZ)      return net.minecraftforge.common.EnumPlantType.Crop;
+        if (this == Blocks.field_150394_bc)     return net.minecraftforge.common.EnumPlantType.Crop;
+        if (this == Blocks.field_150393_bb)   return net.minecraftforge.common.EnumPlantType.Crop;
+        if (this == Blocks.field_150330_I)       return net.minecraftforge.common.EnumPlantType.Desert;
+        if (this == Blocks.field_150392_bi)      return net.minecraftforge.common.EnumPlantType.Water;
+        if (this == Blocks.field_150337_Q)   return net.minecraftforge.common.EnumPlantType.Cave;
+        if (this == Blocks.field_150338_P) return net.minecraftforge.common.EnumPlantType.Cave;
+        if (this == Blocks.field_150388_bm)    return net.minecraftforge.common.EnumPlantType.Nether;
+        if (this == Blocks.field_150345_g)        return net.minecraftforge.common.EnumPlantType.Plains;
+        if (this == Blocks.field_150329_H)      return net.minecraftforge.common.EnumPlantType.Plains;
+        if (this == Blocks.field_150398_cm)   return net.minecraftforge.common.EnumPlantType.Plains;
+        if (this == Blocks.field_150328_O)     return net.minecraftforge.common.EnumPlantType.Plains;
+        if (this == Blocks.field_150327_N)  return net.minecraftforge.common.EnumPlantType.Plains;
+        return net.minecraftforge.common.EnumPlantType.Plains;
+    }
+
+    @Override
+    public IBlockState getPlant(net.minecraft.world.IBlockAccess world, BlockPos pos)
+    {
+        IBlockState state = world.func_180495_p(pos);
+        if (state.func_177230_c() != this) return func_176223_P();
+        return state;
+    }
+    // Akarin Forge - end
 }
