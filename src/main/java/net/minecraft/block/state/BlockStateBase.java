@@ -68,4 +68,9 @@ public abstract class BlockStateBase implements IBlockState {
 
         return stringbuilder.toString();
     }
+    
+    @Nullable
+    public com.google.common.collect.ImmutableTable<IProperty<?>, Comparable<?>, IBlockState> getPropertyValueTable() {
+        return null;
+    }
 }

@@ -18,7 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockDeadBush extends BlockBush implements net.minecraftforge.common.IShearable { // Akarin Forge
+public class BlockDeadBush extends BlockBush implements net.minecraftforge.common.IShearable {
 
     protected static final AxisAlignedBB field_185516_a = new AxisAlignedBB(0.09999999403953552D, 0.0D, 0.09999999403953552D, 0.8999999761581421D, 0.800000011920929D, 0.8999999761581421D);
 
@@ -60,11 +60,11 @@ public class BlockDeadBush extends BlockBush implements net.minecraftforge.commo
 
     }
     
-    // Akarin Forge - start
+   
     @Override public boolean isShearable(ItemStack item, net.minecraft.world.IBlockAccess world, BlockPos pos) { return true; }
     @Override
     public java.util.List<ItemStack> onSheared(ItemStack item, net.minecraft.world.IBlockAccess world, BlockPos pos, int fortune) {
         return java.util.Arrays.asList(new ItemStack(Blocks.field_150330_I));
     }
-    // Akarin Forge - end
+   
 }

@@ -49,10 +49,10 @@ public class BlockChorusFlower extends Block {
             if (world.func_175623_d(blockposition1) && blockposition1.func_177956_o() < 256) {
                 int i = ((Integer) iblockdata.func_177229_b(BlockChorusFlower.field_185607_a)).intValue();
 
-                // Akarin Forge - start
+               
                 // if (i < 5 && random.nextInt(1) == 0) {
                 if (i < 5 &&  net.minecraftforge.common.ForgeHooks.onCropsGrowPre(world, blockposition1, iblockdata, random.nextInt(1) == 0)) {
-                    // Akarin Forge - end
+                   
                     boolean flag = false;
                     boolean flag1 = false;
                     IBlockState iblockdata1 = world.func_180495_p(blockposition.func_177977_b());
@@ -167,7 +167,7 @@ public class BlockChorusFlower extends Block {
                         // this.c(world, blockposition);
                         // CraftBukkit end
                     }
-                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(world, blockposition, iblockdata, world.func_180495_p(blockposition)); // Akarin Forge
+                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(world, blockposition, iblockdata, world.func_180495_p(blockposition));
 
                 }
             }

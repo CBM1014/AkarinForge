@@ -51,14 +51,14 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<Block> { // Akarin Forge
+public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<Block> {
 
     private static final ResourceLocation field_176230_a = new ResourceLocation("air");
-    // Akarin Forge - start
+   
     public static final RegistryNamespacedDefaultedByKey<ResourceLocation, Block> field_149771_c = net.minecraftforge.registries.GameData.getWrapperDefaulted(Block.class);
     @Deprecated //Modders: DO NOT use this! Use GameRegistry
     public static final ObjectIntIdentityMap<IBlockState> field_176229_d = net.minecraftforge.registries.GameData.getBlockStateIDMap();
-    // Akarin Forge - end
+   
     public static final AxisAlignedBB field_185505_j = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
     @Nullable
     public static final AxisAlignedBB field_185506_k = null;
@@ -77,7 +77,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     public float field_149763_I;
     protected final Material field_149764_J;
     protected final MapColor field_181083_K;
-    @Deprecated // Forge: State/world/pos/entity sensitive version below // Akarin Forge
+    @Deprecated // Forge: State/world/pos/entity sensitive version below
     public float field_149765_K;
     protected final BlockStateContainer field_176227_L;
     private IBlockState field_176228_M;
@@ -275,8 +275,8 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         return EnumBlockRenderType.MODEL;
     }
 
-    public boolean func_176200_f(IBlockAccess p_176200_1_, BlockPos p_176200_2_) { // Akarin Forge
-        return p_176200_1_.func_180495_p(p_176200_2_).func_185904_a().func_76222_j(); // Akarin Forge
+    public boolean func_176200_f(IBlockAccess p_176200_1_, BlockPos p_176200_2_) {
+        return p_176200_1_.func_180495_p(p_176200_2_).func_185904_a().func_76222_j();
     }
 
     protected Block func_149711_c(float f) {
@@ -307,9 +307,9 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         return this.field_149789_z;
     }
 
-    @Deprecated //Forge: New State sensitive version. // Akarin Forge
+    @Deprecated //Forge: New State sensitive version.
     public boolean func_149716_u() {
-        return hasTileEntity(func_176223_P()); // Akarin Forge
+        return hasTileEntity(func_176223_P());
     }
 
     @Deprecated
@@ -376,13 +376,13 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         org.spigotmc.AsyncCatcher.catchOp( "block onPlace"); // Spigot
     }
 
-    public void func_180663_b(World p_180663_1_, BlockPos p_180663_2_, IBlockState p_180663_3_) { // Akarin Forge
+    public void func_180663_b(World p_180663_1_, BlockPos p_180663_2_, IBlockState p_180663_3_) {
         org.spigotmc.AsyncCatcher.catchOp( "block remove"); // Spigot
-        // Akarin Forge - start
+       
         if (hasTileEntity(p_180663_3_) && !(this instanceof BlockContainer)) {
             p_180663_1_.func_175713_t(p_180663_2_);
         }
-        // Akarin Forge - end
+       
     }
 
     public int func_149745_a(Random random) {
@@ -394,8 +394,8 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     }
 
     @Deprecated
-    public float func_180647_a(IBlockState p_180647_1_, EntityPlayer p_180647_2_, World p_180647_3_, BlockPos p_180647_4_) { // Akarin Forge
-        return net.minecraftforge.common.ForgeHooks.blockStrength(p_180647_1_, p_180647_2_, p_180647_3_, p_180647_4_); // Akarin Forge
+    public float func_180647_a(IBlockState p_180647_1_, EntityPlayer p_180647_2_, World p_180647_3_, BlockPos p_180647_4_) {
+        return net.minecraftforge.common.ForgeHooks.blockStrength(p_180647_1_, p_180647_2_, p_180647_3_, p_180647_4_);
     }
 
     public final void func_176226_b(World world, BlockPos blockposition, IBlockState iblockdata, int i) {
@@ -403,24 +403,24 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     }
 
     public void func_180653_a(World world, BlockPos blockposition, IBlockState iblockdata, float f, int i) {
-        if (!world.field_72995_K && !world.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe // Akarin Forge
-            // Akarin Forge - start
+        if (!world.field_72995_K && !world.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe
+           
             // int j = this.func_149679_a(i, world.field_73012_v);
             List<ItemStack> drops = getDrops(world, blockposition, iblockdata, i); // use the old method until it gets removed, for backward compatibility
             f = net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, blockposition, iblockdata, i, f, false, harvesters.get());
-            // Akarin Forge - end
+           
 
-            for (ItemStack drop : drops) { // Akarin Forge
+            for (ItemStack drop : drops) {
                 // CraftBukkit - <= to < to allow for plugins to completely disable block drops from explosions
                 if (world.field_73012_v.nextFloat() < f) {
-                    // Akarin Forge - start
+                   
                     /* Item item = this.func_180660_a(iblockdata, world.field_73012_v, i);
 
                     if (item != Items.field_190931_a) {
                         func_180635_a(world, blockposition, new ItemStack(item, 1, this.func_180651_a(iblockdata)));
                     } */
                     func_180635_a(world, blockposition, drop);
-                    // Akarin Forge - end
+                   
                 }
             }
 
@@ -428,13 +428,13 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     }
 
     public static void func_180635_a(World world, BlockPos blockposition, ItemStack itemstack) {
-        if (!world.field_72995_K && !itemstack.func_190926_b() && world.func_82736_K().func_82766_b("doTileDrops") && !world.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe // Akarin Forge
-            // Akarin Forge - start
+        if (!world.field_72995_K && !itemstack.func_190926_b() && world.func_82736_K().func_82766_b("doTileDrops") && !world.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe
+           
             if (captureDrops.get()) {
                 capturedDrops.get().add(p_180635_2_);
                 return;
             }
-            // Akarin Forge - end
+           
             float f = 0.5F;
             double d0 = world.field_73012_v.nextFloat() * 0.5F + 0.25D;
             double d1 = world.field_73012_v.nextFloat() * 0.5F + 0.25D;
@@ -468,7 +468,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         return 0;
     }
 
-    @Deprecated //Forge: State sensitive version // Akarin Forge
+    @Deprecated //Forge: State sensitive version
     public float func_149638_a(Entity entity) {
         return this.field_149781_w / 5.0F;
     }
@@ -495,7 +495,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     }
 
     public boolean func_176196_c(World world, BlockPos blockposition) {
-        return world.func_180495_p(blockposition).func_177230_c().func_176200_f(world, blockposition); // Akarin Forge
+        return world.func_180495_p(blockposition).func_177230_c().func_176200_f(world, blockposition);
     }
 
     public boolean func_180639_a(World world, BlockPos blockposition, IBlockState iblockdata, EntityPlayer entityhuman, EnumHand enumhand, EnumFacing enumdirection, float f, float f1, float f2) {
@@ -504,7 +504,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
 
     public void func_176199_a(World world, BlockPos blockposition, Entity entity) {}
 
-    @Deprecated // Forge: use getStateForPlacement // Akarin Forge
+    @Deprecated // Forge: use getStateForPlacement
     public IBlockState func_180642_a(World world, BlockPos blockposition, EnumFacing enumdirection, float f, float f1, float f2, int i, EntityLivingBase entityliving) {
         return this.func_176203_a(i);
     }
@@ -535,7 +535,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     public void func_180657_a(World world, EntityPlayer entityhuman, BlockPos blockposition, IBlockState iblockdata, @Nullable TileEntity tileentity, ItemStack itemstack) {
         entityhuman.func_71029_a(StatList.func_188055_a(this));
         entityhuman.func_71020_j(0.005F);
-        // Akarin Forge - start
+       
         if (this.canSilkHarvest(world, blockposition, iblockdata, entityhuman) && EnchantmentHelper.func_77506_a(Enchantments.field_185306_r, itemstack) > 0) {
         // if (this.func_149700_E() && EnchantmentHelper.func_77506_a(Enchantments.field_185306_r, itemstack) > 0) {
             List<ItemStack> items = new java.util.ArrayList<ItemStack>();
@@ -553,13 +553,13 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
             this.func_176226_b(world, blockposition, iblockdata, i);
             harvesters.set(null);
         }
-        // Akarin Forge - end
+       
 
     }
 
-    @Deprecated //Forge: State sensitive version // Akarin Forge
+    @Deprecated //Forge: State sensitive version
     protected boolean func_149700_E() {
-        return this.func_176223_P().func_185917_h() && !this.hasTileEntity(silk_check_state.get()); // Akarin Forge
+        return this.func_176223_P().func_185917_h() && !this.hasTileEntity(silk_check_state.get());
     }
 
     protected ItemStack func_180643_i(IBlockState iblockdata) {
@@ -623,7 +623,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         entity.field_70181_x = 0.0D;
     }
 
-    @Deprecated // Forge: Use more sensitive version below: getPickBlock // Akarin Forge
+    @Deprecated // Forge: Use more sensitive version below: getPickBlock
     public ItemStack func_185473_a(World world, BlockPos blockposition, IBlockState iblockdata) {
         return new ItemStack(Item.func_150898_a(this), 1, this.func_180651_a(iblockdata));
     }
@@ -704,7 +704,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         }
     }
 
-    @Deprecated // Forge - World/state/pos/entity sensitive version below // Akarin Forge
+    @Deprecated // Forge - World/state/pos/entity sensitive version below
     public SoundType func_185467_w() {
         return this.field_149762_H;
     }
@@ -896,10 +896,10 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
 
         func_176219_a(155, "quartz_block", block11);
         func_176219_a(156, "quartz_stairs", (new BlockStairs(block11.func_176223_P().func_177226_a(BlockQuartz.field_176335_a, BlockQuartz.EnumType.DEFAULT))).func_149663_c("stairsQuartz"));
-        // Akarin Forge - start
+       
         // func_176219_a(157, "activator_rail", (new BlockRailPowered()).func_149711_c(0.7F).func_149672_a(SoundType.field_185852_e).func_149663_c("activatorRail"));
         func_176219_a(157, "activator_rail", (new BlockRailPowered(true)).func_149711_c(0.7F).func_149672_a(SoundType.field_185852_e).func_149663_c("activatorRail"));
-        // Akarin Forge - end
+       
         func_176219_a(158, "dropper", (new BlockDropper()).func_149711_c(3.5F).func_149672_a(SoundType.field_185851_d).func_149663_c("dropper"));
         func_176219_a(159, "stained_hardened_clay", (new BlockStainedHardenedClay()).func_149711_c(1.25F).func_149752_b(7.0F).func_149672_a(SoundType.field_185851_d).func_149663_c("clayHardenedStained"));
         func_176219_a(160, "stained_glass_pane", (new BlockStainedGlassPane()).func_149711_c(0.3F).func_149672_a(SoundType.field_185853_f).func_149663_c("thinStainedGlass"));
@@ -1026,7 +1026,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
             }
         }
 
-        // Akarin Forge - start
+       
         /* HashSet hashset = Sets.newHashSet(new Block[] { Block.field_149771_c.func_82594_a(new ResourceLocation("tripwire"))});
         Iterator iterator1 = Block.field_149771_c.iterator();
 
@@ -1050,7 +1050,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
                 }
             }
         } */
-        // Akarin Forge - end
+       
 
     }
 
@@ -1087,7 +1087,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         private EnumOffsetType() {}
     }
     
-    // Akarin Forge - start
+   
     /* ======================================== FORGE START =====================================*/
     // For ForgeInternal use Only!
     protected ThreadLocal<EntityPlayer> harvesters = new ThreadLocal();
@@ -2354,5 +2354,5 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
     }
     
     /* ========================================= FORGE END ======================================*/
-    // Akarin Forge - end
+   
 }

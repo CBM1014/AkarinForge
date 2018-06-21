@@ -15,7 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockBush extends Block implements net.minecraftforge.common.IPlantable { // Akarin Forge
+public class BlockBush extends Block implements net.minecraftforge.common.IPlantable {
 
     protected static final AxisAlignedBB field_185515_b = new AxisAlignedBB(0.30000001192092896D, 0.0D, 0.30000001192092896D, 0.699999988079071D, 0.6000000238418579D, 0.699999988079071D);
 
@@ -33,12 +33,12 @@ public class BlockBush extends Block implements net.minecraftforge.common.IPlant
         this.func_149647_a(CreativeTabs.field_78031_c);
     }
 
-    // Akarin Forge - start
+   
     public boolean func_176196_c(World p_176196_1_, BlockPos p_176196_2_) {
         // return super.func_176196_c(world, blockposition) && this.func_185514_i(world.func_180495_p(blockposition.func_177977_b()));
         IBlockState soil = p_176196_1_.func_180495_p(p_176196_2_.func_177977_b());
         return super.func_176196_c(p_176196_1_, p_176196_2_) && soil.func_177230_c().canSustainPlant(soil, p_176196_1_, p_176196_2_.func_177977_b(), EnumFacing.UP, this);
-        // Akarin Forge - end
+       
     }
 
     protected boolean func_185514_i(IBlockState iblockdata) {
@@ -68,12 +68,12 @@ public class BlockBush extends Block implements net.minecraftforge.common.IPlant
     }
 
     public boolean func_180671_f(World world, BlockPos blockposition, IBlockState iblockdata) {
-        // Akarin Forge - start
+       
         if (iblockdata.func_177230_c() == this) { // Forge: This function is called during world gen and placement, before this block is set, so if we are not 'here' then assume it's the pre-check.
             IBlockState soil = world.func_180495_p(blockposition.func_177977_b());
             return soil.func_177230_c().canSustainPlant(soil, world, blockposition.func_177977_b(), net.minecraft.util.EnumFacing.UP, this);
         }
-        // Akarin Forge - end
+       
         return this.func_185514_i(world.func_180495_p(blockposition.func_177977_b()));
     }
 
@@ -98,7 +98,7 @@ public class BlockBush extends Block implements net.minecraftforge.common.IPlant
         return BlockFaceShape.UNDEFINED;
     }
     
-    // Akarin Forge - start
+   
     @Override
     public net.minecraftforge.common.EnumPlantType getPlantType(net.minecraft.world.IBlockAccess world, BlockPos pos)
     {
@@ -128,5 +128,5 @@ public class BlockBush extends Block implements net.minecraftforge.common.IPlant
         if (state.func_177230_c() != this) return func_176223_P();
         return state;
     }
-    // Akarin Forge - end
+   
 }

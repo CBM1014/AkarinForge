@@ -198,10 +198,10 @@ public class PlayerAdvancements {
     }
 
     public boolean func_192750_a(Advancement advancement, String s) {
-        // Akarin Forge - start
+       
         // Forge: don't grant advancements for fake players
         if (this.field_192762_j instanceof net.minecraftforge.common.util.FakePlayer) return false;
-        // Akarin Forge - end
+       
 
         boolean flag = false;
         AdvancementProgress advancementprogress = this.func_192747_a(advancement);
@@ -224,7 +224,7 @@ public class PlayerAdvancements {
                     this.field_192756_d.func_184103_al().func_148539_a(new TextComponentTranslation("chat.type.advancement." + advancement.func_192068_c().func_192291_d().func_192307_a(), new Object[] { this.field_192762_j.func_145748_c_(), advancement.func_193123_j()}));
                 }
 
-                net.minecraftforge.common.ForgeHooks.onAdvancement(this.field_192762_j, advancement); // Akarin Forge
+                net.minecraftforge.common.ForgeHooks.onAdvancement(this.field_192762_j, advancement);
             }
         }
 

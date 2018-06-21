@@ -68,7 +68,7 @@ public class AdvancementManager {
         field_192784_c.func_192087_a();
         Map<ResourceLocation, Advancement.Builder> map = this.func_192781_c();
         this.func_192777_a(map);
-        this.field_193768_e |= net.minecraftforge.common.ForgeHooks.loadAdvancements(map); // Akarin Forge
+        this.field_193768_e |= net.minecraftforge.common.ForgeHooks.loadAdvancements(map);
         field_192784_c.func_192083_a(map);
 
         for (Advancement advancement : field_192784_c.func_192088_b()) {
