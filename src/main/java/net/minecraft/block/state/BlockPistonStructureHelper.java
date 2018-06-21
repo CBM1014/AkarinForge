@@ -53,7 +53,7 @@ public class BlockPistonStructureHelper {
             for (int i = 0; i < this.field_177258_e.size(); ++i) {
                 BlockPos blockposition = (BlockPos) this.field_177258_e.get(i);
 
-                if (this.field_177261_a.func_180495_p(blockposition).func_177230_c() == Blocks.field_180399_cE && !this.func_177250_b(blockposition)) {
+                if (this.field_177261_a.func_180495_p(blockposition).func_177230_c().isStickyBlock(this.field_177261_a.func_180495_p(blockposition)) && !this.func_177250_b(blockposition)) { // Akarin Forge
                     return false;
                 }
             }
@@ -66,7 +66,7 @@ public class BlockPistonStructureHelper {
         IBlockState iblockdata = this.field_177261_a.func_180495_p(blockposition);
         Block block = iblockdata.func_177230_c();
 
-        if (iblockdata.func_185904_a() == Material.field_151579_a) {
+        if (block.isAir(iblockdata, this.field_177261_a, blockposition)) { // Akarin Forge
             return true;
         } else if (!BlockPistonBase.func_185646_a(iblockdata, this.field_177261_a, blockposition, this.field_177257_d, false, enumdirection)) {
             return true;
@@ -80,12 +80,12 @@ public class BlockPistonStructureHelper {
             if (i + this.field_177258_e.size() > 12) {
                 return false;
             } else {
-                while (block == Blocks.field_180399_cE) {
+                while (block.isStickyBlock(iblockdata)) { // Akarin Forge
                     BlockPos blockposition1 = blockposition.func_177967_a(this.field_177257_d.func_176734_d(), i);
 
                     iblockdata = this.field_177261_a.func_180495_p(blockposition1);
                     block = iblockdata.func_177230_c();
-                    if (iblockdata.func_185904_a() == Material.field_151579_a || !BlockPistonBase.func_185646_a(iblockdata, this.field_177261_a, blockposition1, this.field_177257_d, false, this.field_177257_d.func_176734_d()) || blockposition1.equals(this.field_177259_b)) {
+                    if (iblockdata.func_177230_c().isAir(iblockdata, this.field_177261_a, blockposition1) || !BlockPistonBase.func_185646_a(iblockdata, this.field_177261_a, blockposition1, this.field_177257_d, false, this.field_177257_d.func_176734_d()) || blockposition1.equals(this.field_177259_b)) { // Akarin Forge
                         break;
                     }
 
@@ -116,7 +116,7 @@ public class BlockPistonStructureHelper {
                         for (int i1 = 0; i1 <= l + j; ++i1) {
                             BlockPos blockposition3 = (BlockPos) this.field_177258_e.get(i1);
 
-                            if (this.field_177261_a.func_180495_p(blockposition3).func_177230_c() == Blocks.field_180399_cE && !this.func_177250_b(blockposition3)) {
+                            if (this.field_177261_a.func_180495_p(blockposition3).func_177230_c().isStickyBlock(this.field_177261_a.func_180495_p(blockposition3)) && !this.func_177250_b(blockposition3)) { // Akarin Forge
                                 return false;
                             }
                         }
@@ -125,7 +125,7 @@ public class BlockPistonStructureHelper {
                     }
 
                     iblockdata = this.field_177261_a.func_180495_p(blockposition2);
-                    if (iblockdata.func_185904_a() == Material.field_151579_a) {
+                    if (iblockdata.func_177230_c().isAir(iblockdata, this.field_177261_a, blockposition2)) { // Akarin Forge
                         return true;
                     }
 
