@@ -27,9 +27,13 @@ public interface IBlockProperties {
 
     boolean func_189884_a(Entity entity);
 
+    @Deprecated //Forge location aware version below
     int func_185891_c();
+    int getLightOpacity(IBlockAccess world, BlockPos pos);
 
+    @Deprecated //Forge location aware version below
     int func_185906_d();
+    int getLightValue(IBlockAccess world, BlockPos pos);
 
     boolean func_185916_f();
 
@@ -76,7 +80,13 @@ public interface IBlockProperties {
 
     RayTraceResult func_185910_a(World world, BlockPos blockposition, Vec3d vec3d, Vec3d vec3d1);
 
+    @Deprecated // Forge: Use isSideSolid(IBlockAccess, BlockPos, EnumFacing.UP) instead
     boolean func_185896_q();
+    
+   // Forge added functions
+    boolean doesSideBlockRendering(IBlockAccess world, BlockPos pos, EnumFacing side);
+    boolean isSideSolid(IBlockAccess world, BlockPos pos, EnumFacing side);
+    boolean doesSideBlockChestOpening(IBlockAccess world, BlockPos pos, EnumFacing side);
 
     Vec3d func_191059_e(IBlockAccess iblockaccess, BlockPos blockposition);
 

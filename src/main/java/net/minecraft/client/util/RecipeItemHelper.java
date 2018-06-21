@@ -26,9 +26,13 @@ public class RecipeItemHelper {
     public RecipeItemHelper() {}
 
     public void func_194112_a(ItemStack itemstack) {
+        this.accountStack(itemstack, -1);
+    }
+
+    public void accountStack(ItemStack itemstack, int forceCount) {
         if (!itemstack.func_190926_b() && !itemstack.func_77951_h() && !itemstack.func_77948_v() && !itemstack.func_82837_s()) {
             int i = func_194113_b(itemstack);
-            int j = itemstack.func_190916_E();
+            int j = forceCount == -1 ? itemstack.func_190916_E() : forceCount;
 
             this.func_194117_b(i, j);
         }
