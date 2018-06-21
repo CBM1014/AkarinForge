@@ -97,9 +97,11 @@ public abstract class Container {
             ItemStack itemstack1 = (ItemStack) this.field_75153_a.get(i);
 
             if (!ItemStack.fastMatches(itemstack1, itemstack) || (tickCount % org.spigotmc.SpigotConfig.itemDirtyTicks == 0 && !ItemStack.func_77989_b(itemstack1, itemstack))) { // Spigot
+                boolean clientStackChanged = !ItemStack.areItemStacksEqualUsingNBTShareTag(itemstack1, itemstack);
                 itemstack1 = itemstack.func_190926_b() ? ItemStack.field_190927_a : itemstack.func_77946_l();
                 this.field_75153_a.set(i, itemstack1);
 
+                if (clientStackChanged)
                 for (int j = 0; j < this.field_75149_d.size(); ++j) {
                     ((IContainerListener) this.field_75149_d.get(j)).func_71111_a(this, i, itemstack1);
                 }
@@ -516,15 +518,16 @@ public abstract class Container {
                 itemstack1 = slot.func_75211_c();
                 if (!itemstack1.func_190926_b() && itemstack1.func_77973_b() == itemstack.func_77973_b() && (!itemstack.func_77981_g() || itemstack.func_77960_j() == itemstack1.func_77960_j()) && ItemStack.func_77970_a(itemstack, itemstack1)) {
                     int l = itemstack1.func_190916_E() + itemstack.func_190916_E();
+                    int maxSize = Math.min(slot.func_75219_a(), itemstack.func_77976_d());
 
-                    if (l <= itemstack.func_77976_d()) {
+                    if (l <= maxSize) {
                         itemstack.func_190920_e(0);
                         itemstack1.func_190920_e(l);
                         slot.func_75218_e();
                         flag1 = true;
-                    } else if (itemstack1.func_190916_E() < itemstack.func_77976_d()) {
-                        itemstack.func_190918_g(itemstack.func_77976_d() - itemstack1.func_190916_E());
-                        itemstack1.func_190920_e(itemstack.func_77976_d());
+                    } else if (itemstack1.func_190916_E() < maxSize) {
+                        itemstack.func_190918_g(maxSize - itemstack1.func_190916_E());
+                        itemstack1.func_190920_e(maxSize);
                         slot.func_75218_e();
                         flag1 = true;
                     }
@@ -613,7 +616,7 @@ public abstract class Container {
             break;
 
         case 2:
-            itemstack.func_190920_e(itemstack.func_77973_b().func_77639_j());
+            itemstack.func_190920_e(itemstack.func_77976_d());
         }
 
         itemstack.func_190917_f(j);

@@ -169,7 +169,7 @@ public class ContainerBrewingStand extends Container {
 
         @Override
         public boolean func_75214_a(ItemStack itemstack) {
-            return PotionHelper.func_185205_a(itemstack);
+            return net.minecraftforge.common.brewing.BrewingRecipeRegistry.isValidIngredient(itemstack);
         }
 
         @Override
@@ -199,17 +199,15 @@ public class ContainerBrewingStand extends Container {
             PotionType potionregistry = PotionUtils.func_185191_c(itemstack);
 
             if (entityhuman instanceof EntityPlayerMP) {
-                CriteriaTriggers.field_192130_j.func_192173_a((EntityPlayerMP) entityhuman, potionregistry);
+                net.minecraftforge.event.ForgeEventFactory.onPlayerBrewedPotion(entityhuman, potionregistry);
             }
 
             super.func_190901_a(entityhuman, itemstack);
             return itemstack;
         }
 
-        public static boolean func_75243_a_(ItemStack itemstack) {
-            Item item = itemstack.func_77973_b();
-
-            return item == Items.field_151068_bn || item == Items.field_185155_bH || item == Items.field_185156_bI || item == Items.field_151069_bo;
+        public static boolean func_75243_a_(ItemStack p_75243_0_) {
+            return net.minecraftforge.common.brewing.BrewingRecipeRegistry.isValidInput(p_75243_0_);
         }
     }
 

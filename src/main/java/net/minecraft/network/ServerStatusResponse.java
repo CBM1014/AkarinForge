@@ -30,6 +30,7 @@ public class ServerStatusResponse {
 
     public void func_151315_a(ITextComponent ichatbasecomponent) {
         this.field_151326_a = ichatbasecomponent;
+        invalidateJson();
     }
 
     public Players getPlayers() { return func_151318_b(); } // Paper - OBFHELPER
@@ -39,6 +40,7 @@ public class ServerStatusResponse {
 
     public void func_151319_a(ServerStatusResponse.Players serverping_serverpingplayersample) {
         this.field_151324_b = serverping_serverpingplayersample;
+        invalidateJson();
     }
 
     public ServerStatusResponse.Version func_151322_c() {
@@ -47,10 +49,12 @@ public class ServerStatusResponse {
 
     public void func_151321_a(ServerStatusResponse.Version serverping_serverdata) {
         this.field_151325_c = serverping_serverdata;
+        invalidateJson();
     }
 
     public void func_151320_a(String s) {
         this.field_151323_d = s;
+        invalidateJson();
     }
 
     public String func_151316_d() {
@@ -82,6 +86,7 @@ public class ServerStatusResponse {
                 serverping.func_151320_a(JsonUtils.func_151200_h(jsonobject, "favicon"));
             }
 
+            net.minecraftforge.fml.client.FMLClientHandler.instance().captureAdditionalData(serverping, jsonobject);
             return serverping;
         }
 
@@ -105,8 +110,48 @@ public class ServerStatusResponse {
                 jsonobject.addProperty("favicon", serverping.func_151316_d());
             }
 
+            net.minecraftforge.fml.common.network.internal.FMLNetworkHandler.enhanceStatusQuery(jsonobject);
             return jsonobject;
         }
+    }
+    
+    private java.util.concurrent.Semaphore mutex = new java.util.concurrent.Semaphore(1);
+    private String json = null;
+    /**
+     * Returns this object as a Json string.
+     * Converting to JSON if a cached version is not available.
+     *
+     * Also to prevent potentially large memory allocations on the server
+     * this is moved from the S00PacketServerInfo writePacket function
+     *
+     * As this method is called from the network threads thread safety is important!
+     *
+     * @return
+     */
+    public String getJson()
+    {
+        String ret = this.json;
+        if (ret == null)
+        {
+            mutex.acquireUninterruptibly();
+            ret = this.json;
+            if (ret == null)
+            {
+                ret = net.minecraft.network.status.server.SPacketServerInfo.field_149297_a.toJson(this);
+                this.json = ret;
+            }
+            mutex.release();
+        }
+        return ret;
+    }
+
+    /**
+     * Invalidates the cached json, causing the next call to getJson to rebuild it.
+     * This is needed externally because PlayerCountData.setPlayer's is public.
+     */
+    public void invalidateJson()
+    {
+        this.json = null;
     }
 
     public static class Version {

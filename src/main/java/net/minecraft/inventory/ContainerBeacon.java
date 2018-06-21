@@ -80,10 +80,8 @@ public class ContainerBeacon extends Container {
                 }
 
                 slot.func_75220_a(itemstack1, itemstack);
-            } else if (!this.field_82864_f.func_75216_d() && this.field_82864_f.func_75214_a(itemstack1) && itemstack1.func_190916_E() == 1) {
-                if (!this.func_75135_a(itemstack1, 0, 1, false)) {
-                    return ItemStack.field_190927_a;
-                }
+            } else if (this.func_75135_a(itemstack1, 0, 1, false)) { // Forge Fix Shift Clicking in beacons with stacks larger then 1.
+                return ItemStack.field_190927_a;
             } else if (i >= 1 && i < 28) {
                 if (!this.func_75135_a(itemstack1, 28, 37, false)) {
                     return ItemStack.field_190927_a;
@@ -118,10 +116,8 @@ public class ContainerBeacon extends Container {
             super(iinventory, i, j, k);
         }
 
-        public boolean func_75214_a(ItemStack itemstack) {
-            Item item = itemstack.func_77973_b();
-
-            return item == Items.field_151166_bC || item == Items.field_151045_i || item == Items.field_151043_k || item == Items.field_151042_j;
+        public boolean func_75214_a(ItemStack p_75214_1_) {
+            return p_75214_1_.func_77973_b().isBeaconPayment(p_75214_1_);
         }
 
         public int func_75219_a() {

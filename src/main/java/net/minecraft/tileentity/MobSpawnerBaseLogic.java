@@ -141,8 +141,9 @@ public abstract class MobSpawnerBaseLogic {
                     EntityLiving entityinsentient = entity instanceof EntityLiving ? (EntityLiving) entity : null;
 
                     entity.func_70012_b(entity.field_70165_t, entity.field_70163_u, entity.field_70161_v, world.field_73012_v.nextFloat() * 360.0F, 0.0F);
-                    if (entityinsentient == null || entityinsentient.func_70601_bi() && entityinsentient.func_70058_J()) {
+                    if (entityinsentient == null || net.minecraftforge.event.ForgeEventFactory.canEntitySpawnSpawner(entityinsentient, func_98271_a(), (float) entity.field_70165_t, (float) entity.field_70163_u, (float) entity.field_70161_v, this)) {
                         if (this.field_98282_f.func_185277_b().func_186856_d() == 1 && this.field_98282_f.func_185277_b().func_150297_b("id", 8) && entity instanceof EntityLiving) {
+                            if (!net.minecraftforge.event.ForgeEventFactory.doSpecialSpawn(entityinsentient, this.func_98271_a(), (float) entity.field_70165_t, (float) entity.field_70163_u, (float)entity.field_70161_v, this))
                             ((EntityLiving) entity).func_180482_a(world.func_175649_E(new BlockPos(entity)), (IEntityLivingData) null);
                         }
                         entity.spawnedViaMobSpawner = true; // Paper
@@ -281,4 +282,7 @@ public abstract class MobSpawnerBaseLogic {
     public abstract World func_98271_a();
 
     public abstract BlockPos func_177221_b();
+    
+    /* ======================================== FORGE START =====================================*/
+    @Nullable public Entity getSpawnerEntity() { return null; }
 }

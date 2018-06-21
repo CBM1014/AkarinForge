@@ -51,8 +51,8 @@ public class ContainerPlayer extends Container {
                     return 1;
                 }
 
-                public boolean func_75214_a(ItemStack itemstack) {
-                    return enumitemslot1 == EntityLiving.func_184640_d(itemstack); // CraftBukkit - decompile error
+                public boolean func_75214_a(ItemStack p_75214_1_) {
+                    return p_75214_1_.func_77973_b().isValidArmor(p_75214_1_, enumitemslot1, field_82862_h);
                 }
 
                 public boolean func_82869_a(EntityPlayer entityhuman) {
