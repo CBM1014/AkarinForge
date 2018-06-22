@@ -47,7 +47,7 @@ public class BlockFenceGate extends BlockHorizontal {
     public IBlockState func_176221_a(IBlockState iblockdata, IBlockAccess iblockaccess, BlockPos blockposition) {
         EnumFacing.Axis enumdirection_enumaxis = ((EnumFacing) iblockdata.func_177229_b(BlockFenceGate.field_185512_D)).func_176740_k();
 
-        if (enumdirection_enumaxis == EnumFacing.Axis.Z && (iblockaccess.func_180495_p(blockposition.func_177976_e()).func_177230_c() == Blocks.field_150463_bK || iblockaccess.func_180495_p(blockposition.func_177974_f()).func_177230_c() == Blocks.field_150463_bK) || enumdirection_enumaxis == EnumFacing.Axis.X && (iblockaccess.func_180495_p(blockposition.func_177978_c()).func_177230_c() == Blocks.field_150463_bK || iblockaccess.func_180495_p(blockposition.func_177968_d()).func_177230_c() == Blocks.field_150463_bK)) {
+        if (enumdirection_enumaxis == EnumFacing.Axis.Z && (iblockaccess.func_180495_p(blockposition.func_177976_e()).func_177230_c() instanceof BlockWall || iblockaccess.func_180495_p(blockposition.func_177974_f()).func_177230_c() instanceof BlockWall) || enumdirection_enumaxis == EnumFacing.Axis.X && (iblockaccess.func_180495_p(blockposition.func_177978_c()).func_177230_c() instanceof BlockWall|| iblockaccess.func_180495_p(blockposition.func_177968_d()).func_177230_c() instanceof BlockWall)) {
             iblockdata = iblockdata.func_177226_a(BlockFenceGate.field_176467_M, Boolean.valueOf(true));
         }
 
@@ -148,4 +148,21 @@ public class BlockFenceGate extends BlockHorizontal {
     public BlockFaceShape func_193383_a(IBlockAccess iblockaccess, IBlockState iblockdata, BlockPos blockposition, EnumFacing enumdirection) {
         return enumdirection != EnumFacing.UP && enumdirection != EnumFacing.DOWN ? (((EnumFacing) iblockdata.func_177229_b(BlockFenceGate.field_185512_D)).func_176740_k() == enumdirection.func_176746_e().func_176740_k() ? BlockFaceShape.MIDDLE_POLE : BlockFaceShape.UNDEFINED) : BlockFaceShape.UNDEFINED;
     }
+    
+    /* ======================================== FORGE START ======================================== */
+
+    @Override
+    public boolean canBeConnectedTo(IBlockAccess world, BlockPos pos, EnumFacing facing)
+    {
+        IBlockState state = world.func_180495_p(pos);
+        if (state.func_177230_c() instanceof BlockFenceGate &&
+            state.func_193401_d(world, pos, facing) == BlockFaceShape.MIDDLE_POLE)
+        {
+            Block connector = world.func_180495_p(pos.func_177972_a(facing)).func_177230_c();
+            return connector instanceof BlockFence || connector instanceof BlockWall;
+        }
+        return false;
+    }
+
+    /* ======================================== FORGE END ======================================== */
 }

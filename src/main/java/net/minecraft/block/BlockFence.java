@@ -135,8 +135,11 @@ public class BlockFence extends Block {
         return 0;
     }
 
-    public IBlockState func_176221_a(IBlockState iblockdata, IBlockAccess iblockaccess, BlockPos blockposition) {
-        return iblockdata.func_177226_a(BlockFence.field_176526_a, Boolean.valueOf(this.func_176524_e(iblockaccess, blockposition.func_177978_c(), EnumFacing.SOUTH))).func_177226_a(BlockFence.field_176525_b, Boolean.valueOf(this.func_176524_e(iblockaccess, blockposition.func_177974_f(), EnumFacing.WEST))).func_177226_a(BlockFence.field_176527_M, Boolean.valueOf(this.func_176524_e(iblockaccess, blockposition.func_177968_d(), EnumFacing.NORTH))).func_177226_a(BlockFence.field_176528_N, Boolean.valueOf(this.func_176524_e(iblockaccess, blockposition.func_177976_e(), EnumFacing.EAST)));
+    public IBlockState func_176221_a(IBlockState p_176221_1_, IBlockAccess p_176221_2_, BlockPos p_176221_3_) {
+        return p_176221_1_.func_177226_a(field_176526_a, canFenceConnectTo(p_176221_2_, p_176221_3_, EnumFacing.NORTH))
+                    .func_177226_a(field_176525_b,  canFenceConnectTo(p_176221_2_, p_176221_3_, EnumFacing.EAST))
+                    .func_177226_a(field_176527_M, canFenceConnectTo(p_176221_2_, p_176221_3_, EnumFacing.SOUTH))
+                    .func_177226_a(field_176528_N,  canFenceConnectTo(p_176221_2_, p_176221_3_, EnumFacing.WEST));
     }
 
     public IBlockState func_185499_a(IBlockState iblockdata, Rotation enumblockrotation) {
@@ -175,4 +178,21 @@ public class BlockFence extends Block {
     public BlockFaceShape func_193383_a(IBlockAccess iblockaccess, IBlockState iblockdata, BlockPos blockposition, EnumFacing enumdirection) {
         return enumdirection != EnumFacing.UP && enumdirection != EnumFacing.DOWN ? BlockFaceShape.MIDDLE_POLE : BlockFaceShape.CENTER;
     }
+    
+    /* ======================================== FORGE START ======================================== */
+
+    @Override
+    public boolean canBeConnectedTo(IBlockAccess world, BlockPos pos, EnumFacing facing)
+    {
+        return func_176524_e(world, pos.func_177972_a(facing), facing.func_176734_d());
+    }
+
+    private boolean canFenceConnectTo(IBlockAccess world, BlockPos pos, EnumFacing facing)
+    {
+        BlockPos other = pos.func_177972_a(facing);
+        Block block = world.func_180495_p(other).func_177230_c();
+        return block.canBeConnectedTo(world, other, facing.func_176734_d()) || func_176524_e(world, other, facing.func_176734_d());
+    }
+
+    /* ======================================== FORGE END ======================================== */
 }
