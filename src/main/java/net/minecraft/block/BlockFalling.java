@@ -39,7 +39,7 @@ public class BlockFalling extends Block {
     }
 
     private void func_176503_e(World world, BlockPos blockposition) {
-        if (func_185759_i(world.func_180495_p(blockposition.func_177977_b())) && blockposition.func_177956_o() >= 0) {
+        if ((world.func_175623_d(blockposition.func_177977_b()) || func_185759_i(world.func_180495_p(blockposition.func_177977_b()))) && blockposition.func_177956_o() >= 0) {
             boolean flag = true;
 
             if (!BlockFalling.field_149832_M && world.func_175707_a(blockposition.func_177982_a(-32, -32, -32), blockposition.func_177982_a(32, 32, 32))) {
@@ -50,16 +50,17 @@ public class BlockFalling extends Block {
                     world.func_72838_d(entityfallingblock);
                 }
             } else {
+                IBlockState state = world.func_180495_p(blockposition);
                 world.func_175698_g(blockposition);
 
                 BlockPos blockposition1;
 
-                for (blockposition1 = blockposition.func_177977_b(); func_185759_i(world.func_180495_p(blockposition1)) && blockposition1.func_177956_o() > 0; blockposition1 = blockposition1.func_177977_b()) {
+                for (blockposition1 = blockposition.func_177977_b(); (world.func_175623_d(blockposition1) || func_185759_i(world.func_180495_p(blockposition1)) && blockposition1.func_177956_o() > 0; blockposition1 = blockposition1.func_177977_b()) {
                     ;
                 }
 
                 if (blockposition1.func_177956_o() > 0) {
-                    world.func_175656_a(blockposition1.func_177984_a(), this.func_176223_P());
+                    world.func_175656_a(blockposition1.func_177984_a(), state); // Forge: Fix loss of state information during world gen.
                 }
             }
 

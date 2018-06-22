@@ -70,7 +70,7 @@ public class BlockFarmland extends Block {
 
     public void func_180658_a(World world, BlockPos blockposition, Entity entity, float f) {
         super.func_180658_a(world, blockposition, entity, f); // CraftBukkit - moved here as game rules / events shouldn't affect fall damage.
-        if (!world.field_72995_K && world.field_73012_v.nextFloat() < f - 0.5F && entity instanceof EntityLivingBase && (entity instanceof EntityPlayer || world.func_82736_K().func_82766_b("mobGriefing")) && entity.field_70130_N * entity.field_70130_N * entity.field_70131_O > 0.512F) {
+        if (!world.field_72995_K && entity.canTrample(world, this, blockposition, f)) { // Forge: Move logic to Entity#canTrample
             // CraftBukkit start - Interact soil
             org.bukkit.event.Cancellable cancellable;
             if (entity instanceof EntityPlayer) {
@@ -115,10 +115,10 @@ public class BlockFarmland extends Block {
 
     }
 
-    private boolean func_176529_d(World world, BlockPos blockposition) {
-        Block block = world.func_180495_p(blockposition.func_177984_a()).func_177230_c();
+    private boolean func_176529_d(World p_176529_1_, BlockPos p_176529_2_) {
+        Block block = p_176529_1_.func_180495_p(p_176529_2_.func_177984_a()).func_177230_c();
 
-        return block instanceof BlockCrops || block instanceof BlockStem;
+        return block instanceof net.minecraftforge.common.IPlantable && canSustainPlant(p_176529_1_.func_180495_p(p_176529_2_), p_176529_1_, p_176529_2_, net.minecraft.util.EnumFacing.UP, (net.minecraftforge.common.IPlantable)block);
     }
 
     private boolean func_176530_e(World world, BlockPos blockposition) {
