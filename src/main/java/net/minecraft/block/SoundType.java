@@ -54,4 +54,12 @@ public class SoundType {
     public SoundEvent func_185842_g() {
         return this.field_185866_s;
     }
+    
+    public SoundEvent func_185845_c() {
+        return this.field_185862_o;
+    }
+    
+    public SoundEvent func_185846_f() {
+        return this.field_185865_r;
+    }
 }
