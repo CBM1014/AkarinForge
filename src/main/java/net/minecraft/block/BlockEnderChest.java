@@ -80,7 +80,7 @@ public class BlockEnderChest extends BlockContainer {
         TileEntity tileentity = world.func_175625_s(blockposition);
 
         if (inventoryenderchest != null && tileentity instanceof TileEntityEnderChest) {
-            if (world.func_180495_p(blockposition.func_177984_a()).func_185915_l()) {
+            if (world.func_180495_p(blockposition.func_177984_a()).doesSideBlockChestOpening(world, blockposition.func_177984_a(), EnumFacing.DOWN)) {
                 return true;
             } else if (world.field_72995_K) {
                 return true;
