@@ -137,14 +137,31 @@ public class BlockWall extends Block {
     }
 
     public IBlockState func_176221_a(IBlockState iblockdata, IBlockAccess iblockaccess, BlockPos blockposition) {
-        boolean flag = this.func_176253_e(iblockaccess, blockposition.func_177978_c(), EnumFacing.SOUTH);
-        boolean flag1 = this.func_176253_e(iblockaccess, blockposition.func_177974_f(), EnumFacing.WEST);
-        boolean flag2 = this.func_176253_e(iblockaccess, blockposition.func_177968_d(), EnumFacing.NORTH);
-        boolean flag3 = this.func_176253_e(iblockaccess, blockposition.func_177976_e(), EnumFacing.EAST);
+        boolean flag = canWallConnectTo(iblockaccess, blockposition, EnumFacing.NORTH);
+        boolean flag1 = canWallConnectTo(iblockaccess, blockposition, EnumFacing.EAST);
+        boolean flag2 = canWallConnectTo(iblockaccess, blockposition, EnumFacing.SOUTH);
+        boolean flag3 = canWallConnectTo(iblockaccess, blockposition, EnumFacing.WEST);
         boolean flag4 = flag && !flag1 && flag2 && !flag3 || !flag && flag1 && !flag2 && flag3;
 
         return iblockdata.func_177226_a(BlockWall.field_176256_a, Boolean.valueOf(!flag4 || !iblockaccess.func_175623_d(blockposition.func_177984_a()))).func_177226_a(BlockWall.field_176254_b, Boolean.valueOf(flag)).func_177226_a(BlockWall.field_176257_M, Boolean.valueOf(flag1)).func_177226_a(BlockWall.field_176258_N, Boolean.valueOf(flag2)).func_177226_a(BlockWall.field_176259_O, Boolean.valueOf(flag3));
     }
+    
+    /* ======================================== FORGE START ======================================== */
+
+    @Override
+    public boolean canBeConnectedTo(IBlockAccess world, BlockPos pos, EnumFacing facing)
+    {
+        return func_176253_e(world, pos.func_177972_a(facing), facing.func_176734_d());
+    }
+
+    private boolean canWallConnectTo(IBlockAccess world, BlockPos pos, EnumFacing facing)
+    {
+        BlockPos other = pos.func_177972_a(facing);
+        Block block = world.func_180495_p(other).func_177230_c();
+        return block.canBeConnectedTo(world, other, facing.func_176734_d()) || func_176253_e(world, other, facing.func_176734_d());
+    }
+
+    /* ======================================== FORGE END ======================================== */
 
     protected BlockStateContainer func_180661_e() {
         return new BlockStateContainer(this, new IProperty[] { BlockWall.field_176256_a, BlockWall.field_176254_b, BlockWall.field_176257_M, BlockWall.field_176259_O, BlockWall.field_176258_N, BlockWall.field_176255_P});

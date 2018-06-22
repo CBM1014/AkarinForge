@@ -227,6 +227,18 @@ public class BlockTrapDoor extends Block {
     public BlockFaceShape func_193383_a(IBlockAccess iblockaccess, IBlockState iblockdata, BlockPos blockposition, EnumFacing enumdirection) {
         return (enumdirection == EnumFacing.UP && iblockdata.func_177229_b(BlockTrapDoor.field_176285_M) == BlockTrapDoor.DoorHalf.TOP || enumdirection == EnumFacing.DOWN && iblockdata.func_177229_b(BlockTrapDoor.field_176285_M) == BlockTrapDoor.DoorHalf.BOTTOM) && !((Boolean) iblockdata.func_177229_b(BlockTrapDoor.field_176283_b)).booleanValue() ? BlockFaceShape.SOLID : BlockFaceShape.UNDEFINED;
     }
+    
+    @Override
+    public boolean isLadder(IBlockState state, IBlockAccess world, BlockPos pos, EntityLivingBase entity)
+    {
+        if (state.func_177229_b(field_176283_b))
+        {
+            IBlockState down = world.func_180495_p(pos.func_177977_b());
+            if (down.func_177230_c() == net.minecraft.init.Blocks.field_150468_ap)
+                return down.func_177229_b(BlockLadder.field_176382_a) == state.func_177229_b(field_176284_a);
+        }
+        return false;
+    }
 
     public static enum DoorHalf implements IStringSerializable {
 

@@ -29,7 +29,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 
-public class BlockVine extends Block {
+public class BlockVine extends Block implements net.minecraftforge.common.IShearable {
 
     public static final PropertyBool field_176277_a = PropertyBool.func_177716_a("up");
     public static final PropertyBool field_176273_b = PropertyBool.func_177716_a("north");
@@ -164,7 +164,7 @@ public class BlockVine extends Block {
 
     public void func_180650_b(World world, BlockPos blockposition, IBlockState iblockdata, Random random) {
         if (!world.field_72995_K) {
-            if (world.field_73012_v.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.vineModifier) * 4)) == 0) { // Spigot
+            if (world.field_73012_v.nextInt(Math.max(1, (int) (100.0F / world.spigotConfig.vineModifier) * 4)) == 0 && world.func_175697_a(blockposition, 4) { // Spigot
                 boolean flag = true;
                 int i = 5;
                 boolean flag1 = false;
@@ -221,7 +221,7 @@ public class BlockVine extends Block {
                             blockposition2 = blockposition.func_177972_a(enumdirection);
                             iblockdata2 = world.func_180495_p(blockposition2);
                             block = iblockdata2.func_177230_c();
-                            if (block.field_149764_J == Material.field_151579_a) {
+                            if (block.isAir(iblockdata2, world, blockposition2)) {
                                 EnumFacing enumdirection2 = enumdirection.func_176746_e();
                                 EnumFacing enumdirection3 = enumdirection.func_176735_f();
                                 boolean flag2 = ((Boolean) iblockdata.func_177229_b(func_176267_a(enumdirection2))).booleanValue();
@@ -431,4 +431,14 @@ public class BlockVine extends Block {
     public BlockFaceShape func_193383_a(IBlockAccess iblockaccess, IBlockState iblockdata, BlockPos blockposition, EnumFacing enumdirection) {
         return BlockFaceShape.UNDEFINED;
     }
+    
+    /*************************FORGE START***********************************/
+    @Override public boolean isLadder(IBlockState state, IBlockAccess world, BlockPos pos, EntityLivingBase entity){ return true; }
+    @Override public boolean isShearable(ItemStack item, IBlockAccess world, BlockPos pos){ return true; }
+    @Override
+    public java.util.List<ItemStack> onSheared(ItemStack item, IBlockAccess world, BlockPos pos, int fortune)
+    {
+        return java.util.Arrays.asList(new ItemStack(this, 1));
+    }
+    /*************************FORGE END***********************************/
 }
