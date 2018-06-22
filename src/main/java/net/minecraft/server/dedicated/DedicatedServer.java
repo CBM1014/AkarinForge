@@ -78,6 +78,7 @@ public class DedicatedServer extends MinecraftServer implements IServer {
     private boolean field_71338_p;
     private GameType field_71337_q;
     private boolean field_71335_s;
+    public static boolean allowPlayerLogins = false;
 
     // CraftBukkit start - Signature changed
     public DedicatedServer(joptsimple.OptionSet options, DataFixer dataconvertermanager, YggdrasilAuthenticationService yggdrasilauthenticationservice, MinecraftSessionService minecraftsessionservice, GameProfileRepository gameprofilerepository, PlayerProfileCache usercache) {
@@ -179,6 +180,7 @@ public class DedicatedServer extends MinecraftServer implements IServer {
         if (Runtime.getRuntime().maxMemory() / 1024L / 1024L < 512L) {
             DedicatedServer.field_155771_h.warn("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
         }
+        net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStart(this);
 
         DedicatedServer.field_155771_h.info("Loading properties");
         this.field_71340_o = new PropertyManager(this.options); // CraftBukkit - CLI argument support
@@ -286,6 +288,7 @@ public class DedicatedServer extends MinecraftServer implements IServer {
             if (!PreYggdrasilConverter.func_152714_a(this.field_71340_o)) {
                 return false;
             } else {
+                net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
                 this.field_71310_m = new AnvilSaveConverter(server.getWorldContainer(), this.field_184112_s); // CraftBukkit - moved from MinecraftServer constructor
                 long j = System.nanoTime();
 
@@ -327,6 +330,7 @@ public class DedicatedServer extends MinecraftServer implements IServer {
                 TileEntitySkull.func_184293_a(this.func_152358_ax());
                 TileEntitySkull.func_184294_a(this.func_147130_as());
                 PlayerProfileCache.func_187320_a(this.func_71266_T());
+                if (!net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerAboutToStart(this)) return false;
                 DedicatedServer.field_155771_h.info("Preparing level \"{}\"", this.func_71270_I());
                 this.func_71247_a(this.func_71270_I(), this.func_71270_I(), k, worldtype, s2);
                 long i1 = System.nanoTime() - j;
@@ -382,7 +386,8 @@ public class DedicatedServer extends MinecraftServer implements IServer {
                 }
 
                 Items.field_190931_a.func_150895_a(CreativeTabs.field_78027_g, NonNullList.func_191196_a());
-                return true;
+                // <3 you Grum for this, saves us ~30 patch files! --^
+                return net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStarting(this);
             }
         }
     }
@@ -609,7 +614,7 @@ public class DedicatedServer extends MinecraftServer implements IServer {
 
     @Override
     public boolean func_175579_a(World world, BlockPos blockposition, EntityPlayer entityhuman) {
-        if (world.field_73011_w.func_186058_p().func_186068_a() != 0) {
+        if (world.field_73011_w.func_186058_p().getDimension() != 0) {
             return false;
         } else if (this.func_184103_al().func_152603_m().func_152690_d()) {
             return false;
@@ -626,6 +631,9 @@ public class DedicatedServer extends MinecraftServer implements IServer {
             return k <= this.func_82357_ak();
         }
     }
+    
+    //Forge: Enable formated text for colors in console.
+    @Override public void func_145747_a(net.minecraft.util.text.ITextComponent message) { field_155771_h.info(message.func_150254_d()); }
 
     @Override
     public int func_110455_j() {

@@ -20,6 +20,7 @@ public class ServerHangWatchdog implements Runnable {
     private static final Logger field_180251_a = LogManager.getLogger();
     private final DedicatedServer field_180249_b;
     private final long field_180250_c;
+    private boolean firstRun = true;
 
     public ServerHangWatchdog(DedicatedServer dedicatedserver) {
         this.field_180249_b = dedicatedserver;
@@ -32,13 +33,13 @@ public class ServerHangWatchdog implements Runnable {
             long j = MinecraftServer.func_130071_aq();
             long k = j - i;
 
-            if (k > this.field_180250_c) {
+            if (k > this.field_180250_c && !this.firstRun) {
                 ServerHangWatchdog.field_180251_a.fatal("A single server tick took {} seconds (should be max {})", String.format("%.2f", new Object[] { Float.valueOf((float) k / 1000.0F)}), String.format("%.2f", new Object[] { Float.valueOf(0.05F)}));
                 ServerHangWatchdog.field_180251_a.fatal("Considering it to be crashed, server will forcibly shutdown.");
                 ThreadMXBean threadmxbean = ManagementFactory.getThreadMXBean();
                 ThreadInfo[] athreadinfo = threadmxbean.dumpAllThreads(true, true);
                 StringBuilder stringbuilder = new StringBuilder();
-                Error error = new Error();
+                Error error = new Error(String.format("ServerHangWatchdog detected that a single server tick took %.2f seconds (should be max 0.05)", k / 1000F)); // Forge: don't just make a crash report with a seemingly-inexplicable Error
                 ThreadInfo[] athreadinfo1 = athreadinfo;
                 int l = athreadinfo.length;
 
@@ -69,7 +70,8 @@ public class ServerHangWatchdog implements Runnable {
 
                 this.func_180248_a();
             }
-
+            
+            this.firstRun = false;
             try {
                 Thread.sleep(i + this.field_180250_c - j);
             } catch (InterruptedException interruptedexception) {
