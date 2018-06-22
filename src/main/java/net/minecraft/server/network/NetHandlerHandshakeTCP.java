@@ -32,6 +32,7 @@ public class NetHandlerHandshakeTCP implements INetHandlerHandshakeServer {
     }
 
     public void func_147383_a(C00Handshake packethandshakinginsetprotocol) {
+        if (!net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerHandshake(packethandshakinginsetprotocol, this.field_147386_b)) return;
         switch (packethandshakinginsetprotocol.func_149594_c()) {
         case LOGIN:
             this.field_147386_b.func_150723_a(EnumConnectionState.LOGIN);

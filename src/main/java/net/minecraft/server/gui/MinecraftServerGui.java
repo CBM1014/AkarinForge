@@ -65,6 +65,7 @@ public class MinecraftServerGui extends JComponent {
                 System.exit(0);
             }
         });
+        servergui.latch.countDown();
     }
 
     public MinecraftServerGui(DedicatedServer dedicatedserver) {
@@ -140,7 +141,11 @@ public class MinecraftServerGui extends JComponent {
         return jpanel;
     }
 
+    private java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
     public void func_164247_a(final JTextArea jtextarea, final JScrollPane jscrollpane, final String s) {
+        try {
+            latch.await();
+        } catch (InterruptedException e){} // Prevent logging until after constructor has ended.
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {

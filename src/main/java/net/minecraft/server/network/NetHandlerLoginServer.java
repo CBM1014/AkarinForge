@@ -92,7 +92,7 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable 
 
             if (entityplayer == null) {
                 this.field_147328_g = NetHandlerLoginServer.LoginState.READY_TO_ACCEPT;
-                this.field_147327_f.func_184103_al().func_72355_a(this.field_147333_a, this.field_181025_l);
+                net.minecraftforge.fml.common.network.internal.FMLNetworkHandler.fmlServerHandshake(this.field_147327_f.func_184103_al(), this.field_147333_a, this.field_181025_l);
                 this.field_181025_l = null;
             }
         }
@@ -131,7 +131,7 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable 
     // Paper start - Cache authenticator threads
     private static final AtomicInteger threadId = new AtomicInteger(0);
     private static final java.util.concurrent.ExecutorService authenticatorPool = java.util.concurrent.Executors.newCachedThreadPool(
-            r -> new Thread(r, "User Authenticator #" + threadId.incrementAndGet())
+            r -> new Thread(net.minecraftforge.fml.common.thread.SidedThreadGroups.SERVER, r, "User Authenticator #" + field_147331_b.incrementAndGet())
     );
     // Paper end
     // Spigot start
@@ -195,7 +195,7 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable 
                 this.field_147328_g = NetHandlerLoginServer.LoginState.DELAY_ACCEPT;
                 this.field_181025_l = this.field_147327_f.func_184103_al().processLogin(this.field_147337_i, s); // CraftBukkit - add player reference
             } else {
-                this.field_147327_f.func_184103_al().func_72355_a(this.field_147333_a, this.field_147327_f.func_184103_al().processLogin(this.field_147337_i, s)); // CraftBukkit - add player reference
+                net.minecraftforge.fml.common.network.internal.FMLNetworkHandler.fmlServerHandshake(this.field_147327_f.func_184103_al(), this.field_147333_a, this.field_147327_f.func_184103_al().processLogin(this.field_147337_i)); // CraftBukkit - add player reference
             }
         }
 
