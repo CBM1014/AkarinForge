@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -54,6 +55,7 @@ import net.minecraft.network.play.server.SPacketWorldBorder;
 import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.server.BlockPosition;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EntitySelectors;
@@ -66,6 +68,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
@@ -84,6 +87,11 @@ import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraft.world.storage.loot.LootTableManager;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.world.GetCollisionBoxesEvent;
+
 import org.bukkit.Bukkit;
 import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.CraftServer;
@@ -94,6 +102,7 @@ import org.bukkit.event.block.BlockCanBuildEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.generator.ChunkGenerator;
+import org.spigotmc.ActivationRange;
 
 // CraftBukkit start
 import com.google.common.collect.Maps;
@@ -119,7 +128,13 @@ import com.destroystokyo.paper.antixray.ChunkPacketBlockControllerAntiXray; // A
 import com.google.common.collect.Sets;
 // Paper end
 
-public abstract class World implements IBlockAccess {
+public abstract class World implements IBlockAccess, net.minecraftforge.common.capabilities.ICapabilityProvider {
+    /**
+     * Used in the getEntitiesWithinAABB functions to expand the search area for entities.
+     * Modders should change this variable to a higher value if it is less then the radius
+     * of one of there entities.
+     */
+    public static double MAX_ENTITY_RADIUS = 2.0D;
 
     private int field_181546_a = 63;
     protected boolean field_72999_e;
@@ -188,6 +203,12 @@ public abstract class World implements IBlockAccess {
     private boolean field_147481_N;
     private final WorldBorder field_175728_M;
     int[] field_72994_J;
+    
+    public boolean restoringBlockSnapshots = false;
+    public boolean captureBlockSnapshots = false;
+    public java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot> capturedBlockSnapshots = new java.util.ArrayList<net.minecraftforge.common.util.BlockSnapshot>();
+    private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
+    private net.minecraftforge.common.util.WorldCapabilityData capabilityData;
 
     // CraftBukkit start Added the following
     private final CraftWorld world;
@@ -269,6 +290,7 @@ public abstract class World implements IBlockAccess {
         this.field_73011_w = worldprovider;
         this.field_72995_K = flag;
         this.field_175728_M = worldprovider.func_177501_r();
+        perWorldStorage = new MapStorage((ISaveHandler)null);
         // CraftBukkit start
         func_175723_af().world = (WorldServer) this;
         // From PlayerList.setPlayerFileData
@@ -316,7 +338,12 @@ public abstract class World implements IBlockAccess {
         return this;
     }
 
-    public Biome func_180494_b(final BlockPos blockposition) {
+    public Biome func_180494_b(final BlockPos p_180494_1_) {
+        return this.field_73011_w.getBiomeForCoords(p_180494_1_);
+    }
+
+    public Biome getBiomeForCoordsBody(final BlockPos blockposition)
+    {
         if (this.func_175667_e(blockposition)) {
             Chunk chunk = this.func_175726_f(blockposition);
 
@@ -378,7 +405,7 @@ public abstract class World implements IBlockAccess {
 
     @Override
     public boolean func_175623_d(BlockPos blockposition) {
-        return this.func_180495_p(blockposition).func_185904_a() == Material.field_151579_a;
+        return this.func_180495_p(blockposition).func_185904_a().isAir(this.func_180495_p(blockposition), this, blockposition);
     }
 
     public boolean func_175667_e(BlockPos blockposition) {
@@ -476,7 +503,16 @@ public abstract class World implements IBlockAccess {
             return false;
         } else {
             Chunk chunk = this.func_175726_f(blockposition);
-            Block block = iblockdata.func_177230_c();
+            blockposition = blockposition.func_185334_h(); // Forge - prevent mutable BlockPos leaks
+            net.minecraftforge.common.util.BlockSnapshot blockSnapshot = null;
+            if (this.captureBlockSnapshots && !this.field_72995_K)
+            {
+                blockSnapshot = net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(this, blockposition, i);
+                this.capturedBlockSnapshots.add(blockSnapshot);
+            }
+            IBlockState oldState = func_180495_p(blockposition);
+            int oldLight = oldState.getLightValue(this, blockposition);
+            int oldOpacity = oldState.getLightOpacity(this, blockposition);
 
             // CraftBukkit start - capture blockstates
             BlockState blockstate = null;
@@ -484,6 +520,7 @@ public abstract class World implements IBlockAccess {
                 //blockstate = org.bukkit.craftbukkit.block.CraftBlockState.getBlockState(this, blockposition.getX(), blockposition.getY(), blockposition.getZ(), i); // Paper
                 blockstate = world.getBlockAt(blockposition.func_177958_n(), blockposition.func_177956_o(), blockposition.func_177952_p()).getState(); // Paper - use CB getState to get a suitable snapshot
                 this.capturedBlockStates.add(blockstate);
+                if (blockSnapshot != null) this.capturedBlockSnapshots.remove(blockSnapshot);
             }
             // CraftBukkit end
 
@@ -497,9 +534,10 @@ public abstract class World implements IBlockAccess {
                 // CraftBukkit end
                 return false;
             } else {
-                if (iblockdata.func_185891_c() != iblockdata1.func_185891_c() || iblockdata.func_185906_d() != iblockdata1.func_185906_d()) {
+                if (iblockdata.getLightOpacity(this, blockposition) != oldOpacity || iblockdata.getLightValue(this, blockposition) != oldLight) {
                     this.field_72984_F.func_76320_a("checkLight");
-                    chunk.runOrQueueLightUpdate(() -> this.func_175664_x(blockposition)); // Paper - Queue light update
+                    final BlockPos fblockpos = blockposition;
+                    chunk.runOrQueueLightUpdate(() -> this.func_175664_x(fblockpos)); // Paper - Queue light update
                     this.field_72984_F.func_76319_b();
                 }
 
@@ -519,7 +557,7 @@ public abstract class World implements IBlockAccess {
                 */
 
                 // CraftBukkit start
-                if (!this.captureBlockStates) { // Don't notify clients or update physics while capturing blockstates
+                if (blockSnapshot == null || !this.captureBlockStates) { // Don't notify clients or update physics while capturing blockstates
                     // Modularize client and physic updates
                     notifyAndUpdatePhysics(blockposition, chunk, iblockdata1, iblockdata, i);
                 }
@@ -530,19 +568,24 @@ public abstract class World implements IBlockAccess {
         }
     }
 
+    // Split off from original setBlockState(BlockPos, IBlockState, int) method in order to directly send client and physic updates
+    public void markAndNotifyBlock(BlockPos blockpos, @Nullable Chunk chunk, IBlockState oldBlock, IBlockState newBlock, int i) {
+        notifyAndUpdatePhysics(blockpos, chunk, oldBlock, newBlock, i);
+    }
     // CraftBukkit start - Split off from above in order to directly send client and physic updates
     public void notifyAndUpdatePhysics(BlockPos blockposition, Chunk chunk, IBlockState oldBlock, IBlockState newBlock, int i) {
         if ((i & 2) != 0 && (!this.field_72995_K || (i & 4) == 0) && (chunk == null || chunk.func_150802_k())) { // allow chunk to be null here as chunk.isReady() is false when we send our notification during block placement
             this.func_184138_a(blockposition, oldBlock, newBlock, i);
         }
 
+        Block block = newBlock.func_177230_c();
         if (!this.field_72995_K && (i & 1) != 0) {
             this.func_175722_b(blockposition, oldBlock.func_177230_c(), true);
             if (newBlock.func_185912_n()) {
-                this.func_175666_e(blockposition, newBlock.func_177230_c());
+                this.func_175666_e(blockposition, block);
             }
         } else if (!this.field_72995_K && (i & 16) == 0) {
-            this.func_190522_c(blockposition, newBlock.func_177230_c());
+            this.func_190522_c(blockposition, block);
         }
     }
     // CraftBukkit end
@@ -555,7 +598,7 @@ public abstract class World implements IBlockAccess {
         IBlockState iblockdata = this.func_180495_p(blockposition);
         Block block = iblockdata.func_177230_c();
 
-        if (iblockdata.func_185904_a() == Material.field_151579_a) {
+        if (block.isAir(iblockdata, this, blockposition)) {
             return false;
         } else {
             this.func_175718_b(2001, blockposition, Block.func_176210_f(iblockdata));
@@ -630,6 +673,7 @@ public abstract class World implements IBlockAccess {
 
     public void func_175685_c(BlockPos blockposition, Block block, boolean flag) {
         if (captureBlockStates) { return; } // Paper - Cancel all physics during placement
+        if(ForgeEventFactory.onNeighborNotify(this, blockposition, this.func_180495_p(blockposition), EnumSet.allOf(EnumFacing.class), flag).isCanceled()) return;
         this.func_190524_a(blockposition.func_177976_e(), block, blockposition);
         this.func_190524_a(blockposition.func_177974_f(), block, blockposition);
         this.func_190524_a(blockposition.func_177977_b(), block, blockposition);
@@ -644,6 +688,9 @@ public abstract class World implements IBlockAccess {
     }
 
     public void func_175695_a(BlockPos blockposition, Block block, EnumFacing enumdirection) {
+        java.util.EnumSet<EnumFacing> directions = java.util.EnumSet.allOf(EnumFacing.class);
+        directions.remove(enumdirection);
+        if(ForgeEventFactory.onNeighborNotify(this, blockposition, this.func_180495_p(blockposition), directions, false).isCanceled()) return;
         if (enumdirection != EnumFacing.WEST) {
             this.func_190524_a(blockposition.func_177976_e(), block, blockposition);
         }
@@ -719,9 +766,9 @@ public abstract class World implements IBlockAccess {
         if (!this.field_72995_K) {
             IBlockState iblockdata = this.func_180495_p(blockposition);
 
-            if (iblockdata.func_177230_c() == Blocks.field_190976_dk) {
+            if (true || iblockdata.func_177230_c() == Blocks.field_190976_dk) {
                 try {
-                    ((BlockObserver) iblockdata.func_177230_c()).func_190962_b(iblockdata, this, blockposition, block, blockposition1);
+                    iblockdata.func_177230_c().observedNeighborChange(iblockdata, this, blockposition, block, blockposition1);
                 } catch (Throwable throwable) {
                     CrashReport crashreport = CrashReport.func_85055_a(throwable, "Exception while updating neighbours");
                     CrashReportCategory crashreportsystemdetails = crashreport.func_85058_a("Block being updated");
@@ -767,7 +814,7 @@ public abstract class World implements IBlockAccess {
                 for (blockposition1 = blockposition1.func_177977_b(); blockposition1.func_177956_o() > blockposition.func_177956_o(); blockposition1 = blockposition1.func_177977_b()) {
                     IBlockState iblockdata = this.func_180495_p(blockposition1);
 
-                    if (iblockdata.func_185891_c() > 0 && !iblockdata.func_185904_a().func_76224_d()) {
+                    if (iblockdata.func_185891_c().getLightOpacity(iblockdata, this, blockposition1) > 0 && !iblockdata.func_185904_a().func_76224_d()) {
                         return false;
                     }
                 }
@@ -998,7 +1045,7 @@ public abstract class World implements IBlockAccess {
     // Paper end
 
     public boolean func_72935_r() {
-        return this.field_73008_k < 4;
+        return this.field_73011_w.isDaytime(); // this.field_73008_k < 4;
     }
 
     @Nullable
@@ -1159,9 +1206,16 @@ public abstract class World implements IBlockAccess {
     }
     // Paper end
 
-    public void func_184148_a(@Nullable EntityPlayer entityhuman, double d0, double d1, double d2, SoundEvent soundeffect, SoundCategory soundcategory, float f, float f1) {
+    public void func_184148_a(@Nullable EntityPlayer p_184148_1_, double p_184148_2_, double p_184148_4_, double p_184148_6_, SoundEvent p_184148_8_, SoundCategory p_184148_9_, float p_184148_10_, float p_184148_11_) {
+        net.minecraftforge.event.entity.PlaySoundAtEntityEvent event = net.minecraftforge.event.ForgeEventFactory.onPlaySoundAtEntity(p_184148_1_, p_184148_8_, p_184148_9_, p_184148_10_, p_184148_11_);
+        if (event.isCanceled() || event.getSound() == null) return;
+        p_184148_8_ = event.getSound();
+        p_184148_9_ = event.getCategory();
+        p_184148_10_ = event.getVolume();
+        p_184148_11_ = event.getPitch();
+        
         for (int i = 0; i < this.field_73021_x.size(); ++i) {
-            this.field_73021_x.get(i).func_184375_a(entityhuman, soundeffect, soundcategory, d0, d1, d2, f, f1);
+            this.field_73021_x.get(i).func_184375_a(p_184148_1_, p_184148_8_, p_184148_9_, p_184148_2_, p_184148_4_, p_184148_6_, p_184148_10_, p_184148_11_);
         }
 
     }
@@ -1205,7 +1259,8 @@ public abstract class World implements IBlockAccess {
 
     public boolean addEntity(Entity entity, SpawnReason spawnReason) { // Changed signature, added SpawnReason
         org.spigotmc.AsyncCatcher.catchOp( "entity add"); // Spigot
-        if (entity == null) return false;
+        // do not drop any items while restoring blocksnapshots. Prevents dupes
+        if (!this.field_72995_K && (entity == null || (entity instanceof net.minecraft.entity.item.EntityItem && this.restoringBlockSnapshots))) return false;
         if (entity.valid) { MinecraftServer.field_147145_h.error("Attempted Double World add on " + entity, new Throwable()); return true; } // Paper
 
         org.bukkit.event.Cancellable event = null;
@@ -1291,6 +1346,7 @@ public abstract class World implements IBlockAccess {
                 this.field_73010_i.add(entityhuman);
                 this.func_72854_c();
             }
+            if (MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.EntityJoinWorldEvent(entity, this)) && !flag) return false;
 
             this.func_72964_e(i, j).func_76612_a(entity);
             this.field_72996_f.add(entity);
@@ -1401,6 +1457,7 @@ public abstract class World implements IBlockAccess {
         IBlockState iblockdata = Blocks.field_150348_b.func_176223_P();
         BlockPos.PooledMutableBlockPos blockposition_pooledblockposition = BlockPos.PooledMutableBlockPos.func_185346_s();
 
+        if (flag && !ForgeEventFactory.gatherCollisionBoxes(this, entity, axisalignedbb, list)) return true;
         try {
             for (int k1 = i; k1 < j; ++k1) {
                 for (int l1 = i1; l1 < j1; ++l1) {
@@ -1430,7 +1487,7 @@ public abstract class World implements IBlockAccess {
                                 }
 
                                 iblockdata1.func_185908_a(this, blockposition_pooledblockposition, axisalignedbb, list, entity, false);
-                                if (flag && !list.isEmpty()) {
+                                if (flag && !gatherCollisionBoxes(this, entity, axisalignedbb, list)) {
                                     boolean flag6 = true;
 
                                     return flag6;
@@ -1473,7 +1530,13 @@ public abstract class World implements IBlockAccess {
             }
         }
 
+        MinecraftForge.EVENT_BUS.post(new GetCollisionBoxesEvent(this, entity, axisalignedbb, arraylist));
         return arraylist;
+    }
+    
+    public void func_72848_b(IWorldEventListener p_72848_1_)
+    {
+        this.field_73021_x.remove(p_72848_1_);
     }
 
     public boolean func_191503_g(Entity entity) {
@@ -1501,7 +1564,20 @@ public abstract class World implements IBlockAccess {
         return this.func_191504_a((Entity) null, axisalignedbb, true, Lists.<AxisAlignedBB>newArrayList()); // CraftBukkit - decompile error
     }
 
-    public int func_72967_a(float f) {
+    public int func_72967_a(float p_72967_1_) {
+        float f = field_73011_w.getSunBrightnessFactor(p_72967_1_);
+        f = 1 - f;
+        return (int)(f * 11);
+    }
+
+    /**
+     * The current sun brightness factor for this dimension.
+     * 0.0f means no light at all, and 1.0f means maximum sunlight.
+     * Highly recommended for sunlight detection like solar panel.
+     *
+     * @return The current brightness factor
+     * */
+    public float getSunBrightnessFactor(float f) {
         float f1 = this.func_72826_c(f);
         float f2 = 1.0F - (MathHelper.func_76134_b(f1 * 6.2831855F) * 2.0F + 0.5F);
 
@@ -1514,11 +1590,15 @@ public abstract class World implements IBlockAccess {
     }
 
     public float func_72826_c(float f) {
-        return this.field_73011_w.func_76563_a(this.field_72986_A.func_76073_f(), f);
+        return this.field_73011_w.func_76563_a(this.func_72820_D(), f);
     }
 
     public float func_130001_d() {
-        return WorldProvider.field_111203_a[this.field_73011_w.func_76559_b(this.field_72986_A.func_76073_f())];
+        return field_73011_w.getCurrentMoonPhaseFactor();
+    }
+    
+    public float getCurrentMoonPhaseFactorBody() {
+        return WorldProvider.field_111203_a[this.field_73011_w.func_76559_b(this.func_72820_D())];
     }
 
     public float func_72929_e(float f) {
@@ -1539,9 +1619,9 @@ public abstract class World implements IBlockAccess {
 
         for (blockposition1 = new BlockPos(blockposition.func_177958_n(), chunk.func_76625_h() + 16, blockposition.func_177952_p()); blockposition1.func_177956_o() >= 0; blockposition1 = blockposition2) {
             blockposition2 = blockposition1.func_177977_b();
-            Material material = chunk.func_177435_g(blockposition2).func_185904_a();
+            IBlockState state = chunk.func_177435_g(blockposition2);
 
-            if (material.func_76230_c() && material != Material.field_151584_j) {
+            if (state.func_185904_a().func_76230_c() && !state.func_177230_c().isLeaves(state, this, blockposition2) && !state.func_177230_c().isFoliage(this, blockposition2)) {
                 break;
             }
         }
@@ -1575,6 +1655,7 @@ public abstract class World implements IBlockAccess {
             // CraftBukkit end
 
             try {
+                if (entity.updateBlocked) continue;
                 ++entity.field_70173_aa;
                 entity.func_70071_h_();
             } catch (Throwable throwable) {
@@ -1587,7 +1668,11 @@ public abstract class World implements IBlockAccess {
                     entity.func_85029_a(crashreportsystemdetails);
                 }
 
-                throw new ReportedException(crashreport);
+                if (net.minecraftforge.common.ForgeModContainer.removeErroringEntities) {
+                    net.minecraftforge.fml.common.FMLLog.log.fatal("{}", crashreport.func_71502_e());
+                    func_72900_e(entity);
+                }
+                else throw new ReportedException(crashreport);
             }
 
             if (entity.field_70128_L) {
@@ -1688,7 +1773,11 @@ public abstract class World implements IBlockAccess {
         timings.entityTick.stopTiming(); // Spigot
         this.field_72984_F.func_76318_c("blockEntities");
         timings.tileEntityTick.startTiming(); // Spigot
+        this.field_147481_N = true; // FML Move above remove to prevent CMEs
         if (!this.field_147483_b.isEmpty()) {
+            for (Object tile : field_147483_b) {
+               ((TileEntity)tile).onChunkUnload();
+            }
             // Paper start - Use alternate implementation with faster contains
             java.util.Set<TileEntity> toRemove = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
             toRemove.addAll(field_147483_b);
@@ -1755,7 +1844,9 @@ public abstract class World implements IBlockAccess {
                 this.field_175730_i.remove(tileTickPosition--);
                 //this.tileEntityList.remove(tileentity); // Paper - remove unused list
                 if (this.func_175667_e(tileentity.func_174877_v())) {
-                    this.func_175726_f(tileentity.func_174877_v()).func_177425_e(tileentity.func_174877_v());
+                    //Forge: Bugfix: If we set the tile entity it immediately sets it in the chunk, so we could be desyned
+                    Chunk chunk = this.func_175726_f(tileentity.func_174877_v());
+                    if (chunk.func_177424_a(tileentity.func_174877_v(), net.minecraft.world.chunk.Chunk.EnumCreateEntityType.CHECK) == tileentity) chunk.func_177425_e(tileentity.func_174877_v());
                 }
             }
         }
@@ -1803,11 +1894,16 @@ public abstract class World implements IBlockAccess {
     protected void func_184147_l() {}
 
     public boolean func_175700_a(TileEntity tileentity) {
+        // Forge - set the world early as vanilla doesn't set it until next tick
+        if (tileentity.func_145831_w() != this) tileentity.func_145834_a(this);
+        // Forge: wait to add new TE if we're currently processing existing ones
+        if (field_147481_N) return field_147484_a.add(tileentity);
         boolean flag = true; // Paper - remove unused list
 
         if (flag && tileentity instanceof ITickable && !this.field_175730_i.contains(tileentity)) { // Paper
             this.field_175730_i.add(tileentity);
         }
+        tileentity.onLoad();
 
         if (this.field_72995_K) {
             BlockPos blockposition = tileentity.func_174877_v();
@@ -1821,6 +1917,9 @@ public abstract class World implements IBlockAccess {
 
     public void func_147448_a(Collection<TileEntity> collection) {
         if (this.field_147481_N) {
+            for (TileEntity te : collection) {
+                if (te.func_145831_w() != this) te.func_145834_a(this); // Forge - set the world early as vanilla doesn't set it until next tick
+            }
             this.field_147484_a.addAll(collection);
         } else {
             Iterator iterator = collection.iterator();
@@ -1846,7 +1945,12 @@ public abstract class World implements IBlockAccess {
         // TODO: Go back to Vanilla behaviour when comfortable
         // Spigot start
         // Chunk startingChunk = this.getChunkIfLoaded(MathHelper.floor(entity.locX) >> 4, MathHelper.floor(entity.locZ) >> 4);
-        if (flag && !org.spigotmc.ActivationRange.checkIfActive(entity)) {
+        int x = MathHelper.func_76128_c(entity.field_70165_t);
+        int z = MathHelper.func_76128_c(entity.field_70161_v);
+        boolean isForced = getPersistentChunks().containsKey(new ChunkPos(x >> 4, z >> 4));
+        int range = isForced ? 0 : 32;
+        boolean skipUpdate = flag && !this.func_175663_a(x - range, 0, z - range, x + range, 0, z + range, true) && !ActivationRange.checkIfActive(entity);
+        if (!skipUpdate && !net.minecraftforge.event.ForgeEventFactory.canEntityUpdate(entity)) {
             entity.field_70173_aa++;
             entity.inactiveTick();
             // Spigot end
@@ -1865,8 +1969,10 @@ public abstract class World implements IBlockAccess {
             if (entity.func_184218_aH()) {
                 entity.func_70098_U();
             } else {
-                entity.func_70071_h_();
-                entity.postTick(); // CraftBukkit
+                if(!entity.updateBlocked) {
+                    entity.func_70071_h_();
+                    entity.postTick(); // CraftBukkit
+                }
             }
         }
 
@@ -1960,7 +2066,7 @@ public abstract class World implements IBlockAccess {
         for (int i = 0; i < list.size(); ++i) {
             Entity entity1 = (Entity) list.get(i);
 
-            if (!entity1.field_70128_L && entity1.field_70156_m && entity1 != entity && (entity == null || entity1.func_184223_x(entity))) {
+            if (!entity1.field_70128_L && entity1.field_70156_m && entity1 != entity && (entity == null || !entity1.func_184223_x(entity))) { // Forge: fix MC-103516
                 return false;
             }
         }
@@ -2008,6 +2114,12 @@ public abstract class World implements IBlockAccess {
                 for (int i2 = i1; i2 < j1; ++i2) {
                     IBlockState iblockdata = this.func_180495_p(blockposition_pooledblockposition.func_181079_c(k1, l1, i2));
 
+                    Boolean result = iblockdata.func_177230_c().isAABBInsideLiquid(this, blockposition_pooledblockposition, axisalignedbb);
+                    if (result != null) {
+                        if (!result) continue;
+                        blockposition_pooledblockposition.func_185344_t();
+                        return true;
+                    }
                     if (iblockdata.func_185904_a().func_76224_d()) {
                         blockposition_pooledblockposition.func_185344_t();
                         return true;
@@ -2045,6 +2157,9 @@ public abstract class World implements IBlockAccess {
                         if (block == Blocks.field_150480_ab || block == Blocks.field_150356_k || block == Blocks.field_150353_l) {
                             blockposition_pooledblockposition.func_185344_t();
                             return true;
+                        } else if (block.isBurning(this, new BlockPos(k1, l1, i2))) {
+                            blockposition_pooledblockposition.func_185344_t();
+                            return true;
                         }
                     }
                 }
@@ -2077,6 +2192,15 @@ public abstract class World implements IBlockAccess {
                         blockposition_pooledblockposition.func_181079_c(k1, l1, i2);
                         IBlockState iblockdata = this.func_180495_p(blockposition_pooledblockposition);
                         Block block = iblockdata.func_177230_c();
+                        
+                        Boolean result = block.isEntityInsideMaterial(this, blockposition_pooledblockposition, iblockdata, entity, (double) l, material, false);
+                        if (result != null && result == true) {
+                            // Forge: When requested call blocks modifyAcceleration method, and more importantly cause this method to return true, which results in an entity being "inWater"
+                            flag = true;
+                            vec3d = block.func_176197_a(this, blockposition_pooledblockposition, entity, vec3d);
+                            continue;
+                        }
+                        else if (result != null && result == false) continue;
 
                         if (iblockdata.func_185904_a() == material) {
                             double d0 = l1 + 1 - BlockLiquid.func_149801_b(iblockdata.func_177229_b(BlockLiquid.field_176367_b).intValue());
@@ -2116,7 +2240,14 @@ public abstract class World implements IBlockAccess {
         for (int k1 = i; k1 < j; ++k1) {
             for (int l1 = k; l1 < l; ++l1) {
                 for (int i2 = i1; i2 < j1; ++i2) {
-                    if (this.func_180495_p(blockposition_pooledblockposition.func_181079_c(k1, l1, i2)).func_185904_a() == material) {
+                    IBlockState iblockstate1 = this.func_180495_p(blockposition_pooledblockposition.func_181079_c(k1, l1, i2));
+                    Boolean result = iblockstate1.func_177230_c().isAABBInsideMaterial(this, blockposition_pooledblockposition, axisalignedbb, material);
+                    if (result != null) {
+                        if (!result) continue;
+                        blockposition_pooledblockposition.func_185344_t();
+                        return true;
+                    }
+                    if (iblockstate1.func_185904_a() == material) {
                         blockposition_pooledblockposition.func_185344_t();
                         return true;
                     }
@@ -2135,6 +2266,7 @@ public abstract class World implements IBlockAccess {
     public Explosion func_72885_a(@Nullable Entity entity, double d0, double d1, double d2, float f, boolean flag, boolean flag1) {
         Explosion explosion = new Explosion(this, entity, d0, d1, d2, f, flag, flag1);
 
+        if (ForgeEventFactory.onExplosionStart(this, explosion)) return explosion;
         explosion.func_77278_a();
         explosion.func_77279_a(true);
         return explosion;
@@ -2229,6 +2361,7 @@ public abstract class World implements IBlockAccess {
     }
 
     public void func_175690_a(BlockPos blockposition, @Nullable TileEntity tileentity) {
+        blockposition = blockposition.func_185334_h(); // Forge - prevent mutable BlockPos leaks
         if (!blockposition.isInvalidYLocation()) {
             if (tileentity != null && !tileentity.func_145837_r()) {
             // CraftBukkit start
@@ -2241,6 +2374,7 @@ public abstract class World implements IBlockAccess {
             // CraftBukkit end
                 if (this.field_147481_N) {
                     tileentity.func_174878_a(blockposition);
+                    if (tileentity.func_145831_w() != this) tileentity.func_145834_a(this); // Forge - set the world early as vanilla doesn't set it until next tick
                     Iterator iterator = this.field_147484_a.iterator();
 
                     while (iterator.hasNext()) {
@@ -2255,7 +2389,8 @@ public abstract class World implements IBlockAccess {
                     tileentity.func_145834_a(this); // Spigot - No null worlds
                     this.field_147484_a.add(tileentity);
                 } else {
-                    this.func_175726_f(blockposition).func_177426_a(blockposition, tileentity);
+                    Chunk chunk = this.func_175726_f(blockposition);
+                    if (chunk != null) chunk.func_177426_a(blockposition, tileentity);
                     this.func_175700_a(tileentity);
                 }
             }
@@ -2278,6 +2413,7 @@ public abstract class World implements IBlockAccess {
 
             this.func_175726_f(blockposition).func_177425_e(blockposition);
         }
+        this.func_175666_e(blockposition, func_180495_p(blockposition).func_177230_c()); // Notify neighbors of changes
 
     }
 
@@ -2300,7 +2436,7 @@ public abstract class World implements IBlockAccess {
             if (chunk != null && !chunk.func_76621_g()) {
                 IBlockState iblockdata = this.func_180495_p(blockposition);
 
-                return iblockdata.func_185904_a().func_76218_k() && iblockdata.func_185917_h();
+                return iblockdata.func_177230_c().isNormalCube(iblockdata, this, blockposition);
             } else {
                 return flag;
             }
@@ -2319,6 +2455,7 @@ public abstract class World implements IBlockAccess {
     public void func_72891_a(boolean flag, boolean flag1) {
         this.field_72985_G = flag;
         this.field_72992_H = flag1;
+        this.field_73011_w.setAllowedSpawnTypes(flag, flag1);
     }
 
     public void func_72835_b() {
@@ -2326,6 +2463,10 @@ public abstract class World implements IBlockAccess {
     }
 
     protected void func_72947_a() {
+        this.field_73011_w.calculateInitialWeather();
+    }
+
+    public void calculateInitialWeatherBody() {
         if (this.field_72986_A.func_76059_o()) {
             this.field_73004_o = 1.0F;
             if (this.field_72986_A.func_76061_m()) {
@@ -2336,6 +2477,10 @@ public abstract class World implements IBlockAccess {
     }
 
     protected void func_72979_l() {
+        this.field_73011_w.updateWeather();
+    }
+
+    public void updateWeatherBody() {
         if (this.field_73011_w.func_191066_m()) {
             if (!this.field_72995_K) {
                 boolean flag = this.func_82736_K().func_82766_b("doWeatherCycle");
@@ -2427,7 +2572,11 @@ public abstract class World implements IBlockAccess {
         return this.func_175670_e(blockposition, true);
     }
 
-    public boolean func_175670_e(BlockPos blockposition, boolean flag) {
+    public boolean func_175670_e(BlockPos p_175670_1_, boolean p_175670_2_) {
+        return this.field_73011_w.canBlockFreeze(p_175670_1_, p_175670_2_);
+    }
+
+    public boolean canBlockFreezeBody(BlockPos blockposition, boolean flag) {
         Biome biomebase = this.func_180494_b(blockposition);
         float f = biomebase.func_180626_a(blockposition);
 
@@ -2459,7 +2608,11 @@ public abstract class World implements IBlockAccess {
         return this.func_180495_p(blockposition).func_185904_a() == Material.field_151586_h;
     }
 
-    public boolean func_175708_f(BlockPos blockposition, boolean flag) {
+    public boolean func_175708_f(BlockPos p_175708_1_, boolean p_175708_2_) {
+        return this.field_73011_w.canSnowAt(p_175708_1_, p_175708_2_);
+    }
+
+    public boolean canSnowAtBody(BlockPos blockposition, boolean flag) {
         Biome biomebase = this.func_180494_b(blockposition);
         float f = biomebase.func_180626_a(blockposition);
 
@@ -2471,7 +2624,7 @@ public abstract class World implements IBlockAccess {
             if (blockposition.func_177956_o() >= 0 && blockposition.func_177956_o() < 256 && this.func_175642_b(EnumSkyBlock.BLOCK, blockposition) < 10) {
                 IBlockState iblockdata = this.func_180495_p(blockposition);
 
-                if (iblockdata.func_185904_a() == Material.field_151579_a && Blocks.field_150431_aC.func_176196_c(this, blockposition)) {
+                if (iblockdata.func_185904_a().isAir(iblockdata, this, blockposition) && Blocks.field_150431_aC.func_176196_c(this, blockposition)) {
                     return true;
                 }
             }
@@ -2496,10 +2649,10 @@ public abstract class World implements IBlockAccess {
             return 15;
         } else {
             IBlockState iblockdata = this.func_180495_p(blockposition);
-            int i = enumskyblock == EnumSkyBlock.SKY ? 0 : iblockdata.func_185906_d();
-            int j = iblockdata.func_185891_c();
+            int i = enumskyblock == EnumSkyBlock.SKY ? 0 : iblockdata.func_177230_c().getLightValue(iblockdata, this, blockposition);
+            int j = iblockdata.func_177230_c().getLightOpacity(iblockdata, this, blockposition);
 
-            if (j >= 15 && iblockdata.func_185906_d() > 0) {
+            if (false) { // Forge: fix MC-119932
                 j = 1;
             }
 
@@ -2508,7 +2661,7 @@ public abstract class World implements IBlockAccess {
             }
 
             if (j >= 15) {
-                return 0;
+                return i; // Forge: fix MC-119932
             } else if (i >= 14) {
                 return i;
             } else {
@@ -2550,6 +2703,7 @@ public abstract class World implements IBlockAccess {
             // CraftBukkit end
             return false;
         } else {
+            int updateRange = this.func_175648_a(blockposition, 18, false) ? 17 : 15;
             int i = 0;
             int j = 0;
 
@@ -2588,7 +2742,7 @@ public abstract class World implements IBlockAccess {
                             i3 = MathHelper.func_76130_a(i2 - i1);
                             j3 = MathHelper.func_76130_a(j2 - j1);
                             k3 = MathHelper.func_76130_a(k2 - k1);
-                            if (i3 + j3 + k3 < 17) {
+                            if (i3 + j3 + k3 < updateRange) {
                                 BlockPos.PooledMutableBlockPos blockposition_pooledblockposition = BlockPos.PooledMutableBlockPos.func_185346_s();
                                 EnumFacing[] aenumdirection = EnumFacing.values();
                                 int i4 = aenumdirection.length;
@@ -2600,7 +2754,8 @@ public abstract class World implements IBlockAccess {
                                     int i5 = k2 + enumdirection.func_82599_e();
 
                                     blockposition_pooledblockposition.func_181079_c(k4, l4, i5);
-                                    int j5 = Math.max(1, this.func_180495_p(blockposition_pooledblockposition).func_185891_c());
+                                    IBlockState bs = this.func_180495_p(blockposition_pooledblockposition);
+                                    int j5 = Math.max(1, bs.func_177230_c().getLightOpacity(bs, this, blockposition_pooledblockposition));
 
                                     l2 = this.func_175642_b(enumskyblock, blockposition_pooledblockposition);
                                     if (l2 == l3 - j5 && j < this.field_72994_J.length) {
@@ -2637,7 +2792,7 @@ public abstract class World implements IBlockAccess {
                         k3 = Math.abs(k2 - k1);
                         boolean flag = j < this.field_72994_J.length - 6;
 
-                        if (i3 + j3 + k3 < 17 && flag) {
+                        if (i3 + j3 + k3 < updateRange && flag) {
                             if (this.func_175642_b(enumskyblock, blockposition2.func_177976_e()) < l2) {
                                 this.field_72994_J[j++] = i2 - 1 - i1 + 32 + (j2 - j1 + 32 << 6) + (k2 - k1 + 32 << 12);
                             }
@@ -2691,10 +2846,10 @@ public abstract class World implements IBlockAccess {
 
     public List<Entity> func_175674_a(@Nullable Entity entity, AxisAlignedBB axisalignedbb, @Nullable Predicate<? super Entity> predicate) {
         ArrayList arraylist = Lists.newArrayList();
-        int i = MathHelper.func_76128_c((axisalignedbb.field_72340_a - 2.0D) / 16.0D);
-        int j = MathHelper.func_76128_c((axisalignedbb.field_72336_d + 2.0D) / 16.0D);
-        int k = MathHelper.func_76128_c((axisalignedbb.field_72339_c - 2.0D) / 16.0D);
-        int l = MathHelper.func_76128_c((axisalignedbb.field_72334_f + 2.0D) / 16.0D);
+        int i = MathHelper.func_76128_c((axisalignedbb.field_72340_a - MAX_ENTITY_RADIUS) / 16.0D);
+        int j = MathHelper.func_76128_c((axisalignedbb.field_72336_d + MAX_ENTITY_RADIUS) / 16.0D);
+        int k = MathHelper.func_76128_c((axisalignedbb.field_72339_c - MAX_ENTITY_RADIUS) / 16.0D);
+        int l = MathHelper.func_76128_c((axisalignedbb.field_72334_f + MAX_ENTITY_RADIUS) / 16.0D);
 
         for (int i1 = i; i1 <= j; ++i1) {
             for (int j1 = k; j1 <= l; ++j1) {
@@ -2742,10 +2897,10 @@ public abstract class World implements IBlockAccess {
     }
 
     public <T extends Entity> List<T> func_175647_a(Class<? extends T> oclass, AxisAlignedBB axisalignedbb, @Nullable Predicate<? super T> predicate) {
-        int i = MathHelper.func_76128_c((axisalignedbb.field_72340_a - 2.0D) / 16.0D);
-        int j = MathHelper.func_76143_f((axisalignedbb.field_72336_d + 2.0D) / 16.0D);
-        int k = MathHelper.func_76128_c((axisalignedbb.field_72339_c - 2.0D) / 16.0D);
-        int l = MathHelper.func_76143_f((axisalignedbb.field_72334_f + 2.0D) / 16.0D);
+        int i = MathHelper.func_76128_c((axisalignedbb.field_72340_a - MAX_ENTITY_RADIUS) / 16.0D);
+        int j = MathHelper.func_76143_f((axisalignedbb.field_72336_d + MAX_ENTITY_RADIUS) / 16.0D);
+        int k = MathHelper.func_76128_c((axisalignedbb.field_72339_c - MAX_ENTITY_RADIUS) / 16.0D);
+        int l = MathHelper.func_76143_f((axisalignedbb.field_72334_f + MAX_ENTITY_RADIUS) / 16.0D);
         ArrayList arraylist = Lists.newArrayList();
 
         for (int i1 = i; i1 < j; ++i1) {
@@ -2829,9 +2984,11 @@ public abstract class World implements IBlockAccess {
             if (entity == null) {
                 continue;
             }
-            this.field_72996_f.add(entity);
-            // CraftBukkit end
-            this.func_72923_a(entity);
+            if (!MinecraftForge.EVENT_BUS.post(new EntityJoinWorldEvent(entity, this))) {
+                this.field_72996_f.add(entity);
+                // CraftBukkit end
+                this.func_72923_a(entity);
+            }
         }
 
     }
@@ -2845,7 +3002,7 @@ public abstract class World implements IBlockAccess {
         AxisAlignedBB axisalignedbb = flag ? null : block.func_176223_P().func_185890_d(this, blockposition);
 
         // CraftBukkit start - store default return
-        boolean defaultReturn = axisalignedbb != Block.field_185506_k && !this.checkNoVisiblePlayerCollisions(axisalignedbb.func_186670_a(blockposition), entity) ? false : (iblockdata.func_185904_a() == Material.field_151594_q && block == Blocks.field_150467_bQ ? true : iblockdata.func_185904_a().func_76222_j() && block.func_176198_a(this, blockposition, enumdirection)); // Paper - Use our entity search
+        boolean defaultReturn = axisalignedbb != Block.field_185506_k && !this.checkNoVisiblePlayerCollisions(axisalignedbb.func_186670_a(blockposition), entity) ? false : (iblockdata.func_185904_a() == Material.field_151594_q && block == Blocks.field_150467_bQ ? true : iblockdata.func_177230_c().func_176200_f(this, blockposition) && block.func_176198_a(this, blockposition, enumdirection)); // Paper - Use our entity search
         BlockCanBuildEvent event = new BlockCanBuildEvent(this.getWorld().getBlockAt(blockposition.func_177958_n(), blockposition.func_177956_o(), blockposition.func_177952_p()), CraftMagicNumbers.getId(block), defaultReturn);
         this.getServer().getPluginManager().callEvent(event);
 
@@ -2909,7 +3066,7 @@ public abstract class World implements IBlockAccess {
     public int func_175651_c(BlockPos blockposition, EnumFacing enumdirection) {
         IBlockState iblockdata = this.func_180495_p(blockposition);
 
-        return iblockdata.func_185915_l() ? this.func_175676_y(blockposition) : iblockdata.func_185911_a(this, blockposition, enumdirection);
+        return iblockdata.func_177230_c().shouldCheckWeakPower(iblockdata, this, blockposition, enumdirection) ? this.func_175676_y(blockposition) : iblockdata.func_185911_a(this, blockposition, enumdirection);
     }
 
     public boolean func_175640_z(BlockPos blockposition) {
@@ -3035,6 +3192,7 @@ public abstract class World implements IBlockAccess {
                 if (function != null) {
                     d7 *= MoreObjects.firstNonNull(function.apply(entityhuman1), Double.valueOf(1.0D)).doubleValue();
                 }
+                d7 = net.minecraftforge.common.ForgeHooks.getPlayerVisibilityDistance(entityhuman1, d2, d4);
 
                 if ((d4 < 0.0D || Math.abs(entityhuman1.field_70163_u - d1) < d4 * d4) && (d3 < 0.0D || d6 < d7 * d7) && (d5 == -1.0D || d6 < d5)) {
                     d5 = d6;
@@ -3077,7 +3235,7 @@ public abstract class World implements IBlockAccess {
     }
 
     public long func_72905_C() {
-        return this.field_72986_A.func_76063_b();
+        return this.field_73011_w.getSeed();
     }
 
     public long func_82737_E() {
@@ -3085,15 +3243,15 @@ public abstract class World implements IBlockAccess {
     }
 
     public long func_72820_D() {
-        return this.field_72986_A.func_76073_f();
+        return this.field_73011_w.getWorldTime();
     }
 
     public void func_72877_b(long i) {
-        this.field_72986_A.func_76068_b(i);
+        this.field_73011_w.setWorldTime(i);
     }
 
     public BlockPos func_175694_M() {
-        BlockPos blockposition = new BlockPos(this.field_72986_A.func_76079_c(), this.field_72986_A.func_76075_d(), this.field_72986_A.func_76074_e());
+        BlockPos blockposition = this.field_73011_w.getSpawnPoint();
 
         if (!this.func_175723_af().func_177746_a(blockposition)) {
             blockposition = this.func_175645_m(new BlockPos(this.func_175723_af().func_177731_f(), 0.0D, this.func_175723_af().func_177721_g()));
@@ -3103,10 +3261,14 @@ public abstract class World implements IBlockAccess {
     }
 
     public void func_175652_B(BlockPos blockposition) {
-        this.field_72986_A.func_176143_a(blockposition);
+        this.field_73011_w.setSpawnPoint(blockposition);
     }
 
-    public boolean func_175660_a(EntityPlayer entityhuman, BlockPos blockposition) {
+    public boolean func_175660_a(EntityPlayer p_175660_1_, BlockPos p_175660_2_) {
+        return this.field_73011_w.canMineBlock(p_175660_1_, p_175660_2_);
+    }
+
+    public boolean canMineBlockBody(EntityPlayer p_175660_1_, BlockPos p_175660_2_) {
         return true;
     }
 
@@ -3175,9 +3337,7 @@ public abstract class World implements IBlockAccess {
     }
 
     public boolean func_180502_D(BlockPos blockposition) {
-        Biome biomebase = this.func_180494_b(blockposition);
-
-        return biomebase.func_76736_e();
+        return this.field_73011_w.isBlockHighHumidity(blockposition);
     }
 
     @Nullable
@@ -3228,11 +3388,11 @@ public abstract class World implements IBlockAccess {
     }
 
     public int func_72800_K() {
-        return 256;
+        return this.field_73011_w.getHeight();
     }
 
     public int func_72940_L() {
-        return this.field_73011_w.func_177495_o() ? 128 : 256;
+        return this.field_73011_w.getActualHeight();
     }
 
     public Random func_72843_D(int i, int j, int k) {
@@ -3298,22 +3458,18 @@ public abstract class World implements IBlockAccess {
     }
 
     public void func_175666_e(BlockPos blockposition, Block block) {
-        Iterator iterator = EnumFacing.Plane.HORIZONTAL.iterator();
-
-        while (iterator.hasNext()) {
-            EnumFacing enumdirection = (EnumFacing) iterator.next();
+        for (EnumFacing enumdirection : EnumFacing.field_82609_l) {
             BlockPos blockposition1 = blockposition.func_177972_a(enumdirection);
 
             if (this.func_175667_e(blockposition1)) {
                 IBlockState iblockdata = this.func_180495_p(blockposition1);
 
-                if (Blocks.field_150441_bU.func_185547_C(iblockdata)) {
-                    iblockdata.func_189546_a(this, blockposition1, block, blockposition);
-                } else if (iblockdata.func_185915_l()) {
+                iblockdata.func_177230_c().onNeighborChange(this, blockposition1, blockposition);
+                if (iblockdata.func_177230_c().isNormalCube(iblockdata, this, blockposition1)) {
                     blockposition1 = blockposition1.func_177972_a(enumdirection);
                     iblockdata = this.func_180495_p(blockposition1);
-                    if (Blocks.field_150441_bU.func_185547_C(iblockdata)) {
-                        iblockdata.func_189546_a(this, blockposition1, block, blockposition);
+                    if (iblockdata.func_177230_c().getWeakChanges(this, blockposition1)) {
+                        iblockdata.func_177230_c().onNeighborChange(this, blockposition1, blockposition);
                     }
                 }
             }
@@ -3379,5 +3535,123 @@ public abstract class World implements IBlockAccess {
     @Nullable
     public BlockPos func_190528_a(String s, BlockPos blockposition, boolean flag) {
         return null;
+    }
+    
+    /* ======================================== FORGE START =====================================*/
+    /**
+     * Determine if the given block is considered solid on the
+     * specified side.  Used by placement logic.
+     *
+     * @param pos Block Position
+     * @param side The Side in question
+     * @return True if the side is solid
+    */
+    public boolean isSideSolid(BlockPos pos, EnumFacing side)
+    {
+       return isSideSolid(pos, side, false);
+    }
+
+    /**
+     * Determine if the given block is considered solid on the
+     * specified side.  Used by placement logic.
+     *
+     * @param pos Block Position
+     * @param side The Side in question
+     * @param _default The default to return if the block doesn't exist.
+     * @return True if the side is solid
+     */
+    @Override
+    public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean _default)
+    {
+        if (!this.func_175701_a(pos)) return _default;
+
+        Chunk chunk = func_175726_f(pos);
+        if (chunk == null || chunk.func_76621_g()) return _default;
+        return func_180495_p(pos).isSideSolid(this, pos, side);
+    }
+
+    /**
+     * Get the persistent chunks for this world
+     *
+     * @return
+     */
+    public com.google.common.collect.ImmutableSetMultimap<net.minecraft.util.math.ChunkPos, net.minecraftforge.common.ForgeChunkManager.Ticket> getPersistentChunks()
+    {
+        return net.minecraftforge.common.ForgeChunkManager.getPersistentChunksFor(this);
+    }
+
+    public Iterator<Chunk> getPersistentChunkIterable(Iterator<Chunk> chunkIterator)
+    {
+        return net.minecraftforge.common.ForgeChunkManager.getPersistentChunksIterableFor(this, chunkIterator);
+    }
+    /**
+     * Readded as it was removed, very useful helper function
+     *
+     * @param pos Block position
+     * @return The blocks light opacity
+     */
+    public int getBlockLightOpacity(BlockPos pos)
+    {
+        if (!this.func_175701_a(pos)) return 0;
+        return func_175726_f(pos).func_177437_b(pos);
+    }
+
+    /**
+     * Returns a count of entities that classify themselves as the specified creature type.
+     */
+    public int countEntities(net.minecraft.entity.EnumCreatureType type, boolean forSpawnCount)
+    {
+        int count = 0;
+        for (int x = 0; x < field_72996_f.size(); x++)
+        {
+            if (((Entity)field_72996_f.get(x)).isCreatureType(type, forSpawnCount))
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Deprecated // remove in 1.13
+    public void markTileEntitiesInChunkForRemoval(Chunk chunk)
+    {
+        for (TileEntity tileentity : chunk.func_177434_r().values())
+        {
+            func_147457_a(tileentity);
+        }
+    }
+
+    protected void initCapabilities()
+    {
+        net.minecraftforge.common.capabilities.ICapabilityProvider parent = field_73011_w.initCapabilities();
+        capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities(this, parent);
+        net.minecraftforge.common.util.WorldCapabilityData data = (net.minecraftforge.common.util.WorldCapabilityData)perWorldStorage.func_75742_a(net.minecraftforge.common.util.WorldCapabilityData.class, net.minecraftforge.common.util.WorldCapabilityData.ID);
+        if (data == null)
+        {
+            capabilityData = new net.minecraftforge.common.util.WorldCapabilityData(capabilities);
+            perWorldStorage.func_75745_a(capabilityData.field_76190_i, capabilityData);
+        }
+        else
+        {
+            capabilityData = data;
+            capabilityData.setCapabilities(field_73011_w, capabilities);
+        }
+    }
+    @Override
+    public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable EnumFacing facing)
+    {
+        return capabilities == null ? false : capabilities.hasCapability(capability, facing);
+    }
+    @Override
+    @Nullable
+    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable EnumFacing facing)
+    {
+        return capabilities == null ? null : capabilities.getCapability(capability, facing);
+    }
+
+    protected MapStorage perWorldStorage; //Moved to a getter to simulate final without being final so we can load in subclasses.
+    public MapStorage getPerWorldStorage()
+    {
+        return perWorldStorage;
     }
 }
