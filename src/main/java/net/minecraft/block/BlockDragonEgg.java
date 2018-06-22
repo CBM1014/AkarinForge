@@ -43,7 +43,7 @@ public class BlockDragonEgg extends Block {
     }
 
     private void func_180683_d(World world, BlockPos blockposition) {
-        if (BlockFalling.func_185759_i(world.func_180495_p(blockposition.func_177977_b())) && blockposition.func_177956_o() >= 0) {
+        if (world.func_175623_d(blockposition.func_177977_b()) && BlockFalling.func_185759_i(world.func_180495_p(blockposition.func_177977_b())) && blockposition.func_177956_o() >= 0) {
             boolean flag = true;
 
             if (!BlockFalling.field_149832_M && world.func_175707_a(blockposition.func_177982_a(-32, -32, -32), blockposition.func_177982_a(32, 32, 32))) {
@@ -53,7 +53,7 @@ public class BlockDragonEgg extends Block {
 
                 BlockPos blockposition1;
 
-                for (blockposition1 = blockposition; BlockFalling.func_185759_i(world.func_180495_p(blockposition1)) && blockposition1.func_177956_o() > 0; blockposition1 = blockposition1.func_177977_b()) {
+                for (blockposition1 = blockposition; world.func_175623_d(blockposition1) && BlockFalling.func_185759_i(world.func_180495_p(blockposition1)) && blockposition1.func_177956_o() > 0; blockposition1 = blockposition1.func_177977_b()) {
                     ;
                 }
 
@@ -81,7 +81,7 @@ public class BlockDragonEgg extends Block {
             for (int i = 0; i < 1000; ++i) {
                 BlockPos blockposition1 = blockposition.func_177982_a(world.field_73012_v.nextInt(16) - world.field_73012_v.nextInt(16), world.field_73012_v.nextInt(8) - world.field_73012_v.nextInt(8), world.field_73012_v.nextInt(16) - world.field_73012_v.nextInt(16));
 
-                if (world.func_180495_p(blockposition1).func_177230_c().field_149764_J == Material.field_151579_a) {
+                if (world.func_175623_d(blockposition1)) {
                     // CraftBukkit start
                     org.bukkit.block.Block from = world.getWorld().getBlockAt(blockposition.func_177958_n(), blockposition.func_177956_o(), blockposition.func_177952_p());
                     org.bukkit.block.Block to = world.getWorld().getBlockAt(blockposition1.func_177958_n(), blockposition1.func_177956_o(), blockposition1.func_177952_p());

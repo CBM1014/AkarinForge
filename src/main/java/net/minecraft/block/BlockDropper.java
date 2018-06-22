@@ -44,7 +44,7 @@ public class BlockDropper extends BlockDispenser {
             } else {
                 ItemStack itemstack = tileentitydispenser.func_70301_a(i);
 
-                if (!itemstack.func_190926_b()) {
+                if (!itemstack.func_190926_b() && net.minecraftforge.items.VanillaInventoryCodeHooks.dropperInsertHook(world, blockposition, tileentitydispenser, i, itemstack)) {
                     EnumFacing enumdirection = (EnumFacing) world.func_180495_p(blockposition).func_177229_b(BlockDropper.field_176441_a);
                     BlockPos blockposition1 = blockposition.func_177972_a(enumdirection);
                     IInventory iinventory = TileEntityHopper.func_145893_b(world, (double) blockposition1.func_177958_n(), (double) blockposition1.func_177956_o(), (double) blockposition1.func_177952_p());

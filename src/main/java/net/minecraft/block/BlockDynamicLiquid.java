@@ -33,6 +33,7 @@ public class BlockDynamicLiquid extends BlockLiquid {
     }
 
     public void func_180650_b(World world, BlockPos blockposition, IBlockState iblockdata, Random random) {
+        if (!world.func_175697_a(blockposition, this.func_185698_b(world))) return; // Forge: avoid loading unloaded chunks
         int i = ((Integer) iblockdata.func_177229_b(BlockDynamicLiquid.field_176367_b)).intValue();
         byte b0 = 1;
 
@@ -69,7 +70,7 @@ public class BlockDynamicLiquid extends BlockLiquid {
                 }
             }
 
-            if (this.field_149815_a >= 2 && this.field_149764_J == Material.field_151586_h) {
+            if (this.field_149815_a >= 2 && net.minecraftforge.event.ForgeEventFactory.canCreateFluidSource(world, blockposition, iblockdata, this.field_149764_J == Material.field_151586_h)) {
                 IBlockState iblockdata1 = world.func_180495_p(blockposition.func_177977_b());
 
                 if (iblockdata1.func_185904_a().func_76220_a()) {
@@ -172,6 +173,7 @@ public class BlockDynamicLiquid extends BlockLiquid {
                 if (this.field_149764_J == Material.field_151587_i) {
                     this.func_180688_d(world, blockposition);
                 } else {
+                    if (iblockdata.func_177230_c() != Blocks.field_150431_aC) //Forge: Vanilla has a 'bug' where snowballs don't drop like every other block. So special case because ewww...
                     iblockdata.func_177230_c().func_176226_b(world, blockposition, iblockdata, 0);
                 }
             }
@@ -193,7 +195,7 @@ public class BlockDynamicLiquid extends BlockLiquid {
                 IBlockState iblockdata = world.func_180495_p(blockposition1);
 
                 if (!this.func_176372_g(world, blockposition1, iblockdata) && (iblockdata.func_185904_a() != this.field_149764_J || ((Integer) iblockdata.func_177229_b(BlockDynamicLiquid.field_176367_b)).intValue() > 0)) {
-                    if (!this.func_176372_g(world, blockposition1.func_177977_b(), iblockdata)) {
+                    if (!this.func_176372_g(world, blockposition1.func_177977_b(), world.func_180495_p(blockposition1.func_177977_b()))) {
                         return i;
                     }
 
@@ -228,6 +230,7 @@ public class BlockDynamicLiquid extends BlockLiquid {
             if (!this.func_176372_g(world, blockposition1, iblockdata) && (iblockdata.func_185904_a() != this.field_149764_J || ((Integer) iblockdata.func_177229_b(BlockDynamicLiquid.field_176367_b)).intValue() > 0)) {
                 int j;
 
+                
                 if (this.func_176372_g(world, blockposition1.func_177977_b(), world.func_180495_p(blockposition1.func_177977_b()))) {
                     j = this.func_176374_a(world, blockposition1, 1, enumdirection.func_176734_d());
                 } else {
@@ -249,9 +252,10 @@ public class BlockDynamicLiquid extends BlockLiquid {
     }
 
     private boolean func_176372_g(World world, BlockPos blockposition, IBlockState iblockdata) {
-        Block block = world.func_180495_p(blockposition).func_177230_c();
+        Block block = iblockdata.func_177230_c(); // Forge: state must be valid for position
+        Material mat = iblockdata.func_185904_a();
 
-        return !(block instanceof BlockDoor) && block != Blocks.field_150472_an && block != Blocks.field_150468_ap && block != Blocks.field_150436_aH ? (block.field_149764_J != Material.field_151567_E && block.field_149764_J != Material.field_189963_J ? block.field_149764_J.func_76230_c() : true) : true;
+        return !(block instanceof BlockDoor) && block != Blocks.field_150472_an && block != Blocks.field_150468_ap && block != Blocks.field_150436_aH ? (mat != Material.field_151567_E && mat != Material.field_189963_J ? mat.func_76230_c() : true) : true;
     }
 
     protected int func_176371_a(World world, BlockPos blockposition, int i) {
