@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>paper2srg</artifactId>
+    <artifactId>akarinforge</artifactId>
     <packaging>jar</packaging>
     <version>1.12.2-R0.1-SNAPSHOT</version>
-    <name>Paper2Srg</name>
-    <url>https://github.com/Akarin-project/Paper2Srg</url>
+    <name>AkarinForge</name>
+    <url>https://github.com/Akarin-project/AkarinForge</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -189,6 +189,13 @@
             <artifactId>asm-commons</artifactId>
             <version>6.1.1</version>
         </dependency>
+        
+        <!-- Akarin -->
+        <dependency>
+            <groupId>net.minecraftforge</groupId>
+            <artifactId>forge</artifactId>
+            <version>1.12.2-14.23.4.2709</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
@@ -230,6 +237,10 @@
         <repository>
             <id>md_5-releases</id>
             <url>https://repo.md-5.net/content/repositories/releases/</url>
+        </repository>
+        <repository>
+            <id>forge-repo</id>
+            <url>https://files.minecraftforge.net/maven/</url>
         </repository>
     </repositories>
 
