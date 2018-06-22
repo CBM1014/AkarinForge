@@ -20,7 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockWeb extends Block {
+public class BlockWeb extends Block implements net.minecraftforge.common.IShearable {
 
     public BlockWeb() {
         super(Material.field_151569_G);
@@ -63,5 +63,11 @@ public class BlockWeb extends Block {
 
     public BlockFaceShape func_193383_a(IBlockAccess iblockaccess, IBlockState iblockdata, BlockPos blockposition, EnumFacing enumdirection) {
         return BlockFaceShape.UNDEFINED;
+    }
+    
+    @Override public boolean isShearable(ItemStack item, IBlockAccess world, BlockPos pos) { return true; }
+    @Override
+    public java.util.List<ItemStack> onSheared(ItemStack item, IBlockAccess world, BlockPos pos, int fortune) {
+        return com.google.common.collect.Lists.newArrayList(new ItemStack(Item.func_150898_a(this)));
     }
 }
