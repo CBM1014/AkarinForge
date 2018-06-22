@@ -431,7 +431,7 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         if (!world.field_72995_K && !itemstack.func_190926_b() && world.func_82736_K().func_82766_b("doTileDrops") && !world.restoringBlockSnapshots) { // do not drop items while restoring blockstates, prevents item dupe
            
             if (captureDrops.get()) {
-                capturedDrops.get().add(p_180635_2_);
+                capturedDrops.get().add(itemstack);
                 return;
             }
            
@@ -2232,14 +2232,6 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         return null;
     }
     
-    /**
-     * Queries if this block should render in a given layer.
-     * ISmartBlockModel can use {@link net.minecraftforge.client.MinecraftForgeClient#getRenderLayer()} to alter their model based on layer.
-     */
-    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer)
-    {
-        return func_180664_k() == layer;
-    }
     // For Internal use only to capture droped items inside getDrops
     protected static ThreadLocal<Boolean> captureDrops = ThreadLocal.withInitial(() -> false);
     protected static ThreadLocal<NonNullList<ItemStack>> capturedDrops = ThreadLocal.withInitial(NonNullList::func_191196_a);

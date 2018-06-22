@@ -189,6 +189,13 @@
             <artifactId>asm-commons</artifactId>
             <version>6.1.1</version>
         </dependency>
+
+        <!-- Akrain Forge -->
+        <dependency>
+            <groupId>net.minecraftforge</groupId>
+            <artifactId>forgesrg</artifactId>
+            <version>1.12.2-14.23.4.0</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
