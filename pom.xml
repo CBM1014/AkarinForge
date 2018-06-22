@@ -189,13 +189,6 @@
             <artifactId>asm-commons</artifactId>
             <version>6.1.1</version>
         </dependency>
-        
-        <!-- Akarin -->
-        <dependency>
-            <groupId>net.minecraftforge</groupId>
-            <artifactId>forge</artifactId>
-            <version>1.12.2-14.23.4.2709</version>
-        </dependency>
     </dependencies>
 
     <distributionManagement>
@@ -237,10 +230,6 @@
         <repository>
             <id>md_5-releases</id>
             <url>https://repo.md-5.net/content/repositories/releases/</url>
-        </repository>
-        <repository>
-            <id>forge-repo</id>
-            <url>https://files.minecraftforge.net/maven/</url>
         </repository>
     </repositories>
 
