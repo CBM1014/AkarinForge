@@ -13,6 +13,7 @@ import java.util.Set;
 
 public class ClassInheritanceMultiMap<T> extends AbstractSet<T> {
 
+    // Forge: Use concurrent collection to allow creating chunks from multiple threads safely
     private static final Set<Class<?>> field_181158_a = Sets.newConcurrentHashSet(); // CraftBukkit
     private final Map<Class<?>, List<T>> field_180218_a = Maps.newHashMap();
     private final Set<Class<?>> field_180216_b = Sets.newIdentityHashSet();

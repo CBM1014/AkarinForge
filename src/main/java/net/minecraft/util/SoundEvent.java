@@ -1,10 +1,10 @@
 package net.minecraft.util;
+
 import net.minecraft.util.registry.RegistryNamespaced;
 
+public class SoundEvent extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<SoundEvent> {
 
-public class SoundEvent {
-
-    public static final RegistryNamespaced<ResourceLocation, SoundEvent> field_187505_a = new RegistryNamespaced();
+    public static final RegistryNamespaced<ResourceLocation, SoundEvent> field_187505_a = net.minecraftforge.registries.GameData.getWrapper(SoundEvent.class);
     private final ResourceLocation field_187506_b;
     private static int field_187507_c;
 

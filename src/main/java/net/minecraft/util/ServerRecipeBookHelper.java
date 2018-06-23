@@ -51,6 +51,9 @@ public class ServerRecipeBookHelper {
             } else if (container instanceof ContainerPlayer) {
                 this.field_194335_f = ((ContainerPlayer) container).field_75179_f;
                 this.field_194336_g = ((ContainerPlayer) container).field_75181_e;
+            } else if (container instanceof net.minecraftforge.common.crafting.IRecipeContainer) {
+                this.field_194335_f = ((net.minecraftforge.common.crafting.IRecipeContainer)container).getCraftResult();
+                this.field_194336_g = ((net.minecraftforge.common.crafting.IRecipeContainer)container).getCraftMatrix();
             }
 
             if (this.field_194335_f != null && this.field_194336_g != null) {
@@ -169,11 +172,10 @@ public class ServerRecipeBookHelper {
         int j = this.field_194336_g.func_174922_i();
         int k = this.field_194336_g.func_174923_h();
 
-        if (this.field_194333_d instanceof ShapedRecipes) {
-            ShapedRecipes shapedrecipes = (ShapedRecipes) this.field_194333_d;
-
-            j = shapedrecipes.func_192403_f();
-            k = shapedrecipes.func_192404_g();
+        if (this.field_194333_d instanceof net.minecraftforge.common.crafting.IShapedRecipe) {
+            net.minecraftforge.common.crafting.IShapedRecipe shapedrecipes = (net.minecraftforge.common.crafting.IShapedRecipe) this.field_194333_d;
+            j = shapedrecipes.getRecipeWidth();
+            k = shapedrecipes.getRecipeHeight();
         }
 
         int l = 1;

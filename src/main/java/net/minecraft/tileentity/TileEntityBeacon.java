@@ -239,17 +239,18 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
                 afloat = iblockdata.func_177229_b(BlockStainedGlass.field_176547_a).func_193349_f();
             } else {
                 if (iblockdata.func_177230_c() != Blocks.field_150397_co) {
-                    if (iblockdata.func_185891_c() >= 15 && iblockdata.func_177230_c() != Blocks.field_150357_h) {
+                    if (iblockdata.getLightOpacity(field_145850_b, blockposition_mutableblockposition) >= 15 && iblockdata.func_177230_c() != Blocks.field_150357_h) {
                         this.field_146015_k = false;
                         this.field_174909_f.clear();
                         break;
                     }
 
-                    tileentitybeacon_beaconcolortracker.func_177262_a();
-                    continue;
-                }
-
-                afloat = iblockdata.func_177229_b(BlockStainedGlassPane.field_176245_a).func_193349_f();
+                    float[] customColor = iblockdata.func_177230_c().getBeaconColorMultiplier(iblockdata, this.field_145850_b, blockposition_mutableblockposition, func_174877_v());
+                    if (customColor != null) afloat = customColor; else {
+                        tileentitybeacon_beaconcolortracker.func_177262_a();
+                        continue;
+                    }
+                } else afloat = iblockdata.func_177229_b(BlockStainedGlassPane.field_176245_a).func_193349_f();
             }
 
             if (!flag) {
@@ -280,7 +281,7 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
                     for (int l1 = k - i1; l1 <= k + i1; ++l1) {
                         Block block = this.field_145850_b.func_180495_p(new BlockPos(k1, j1, l1)).func_177230_c();
 
-                        if (block != Blocks.field_150475_bE && block != Blocks.field_150340_R && block != Blocks.field_150484_ah && block != Blocks.field_150339_S) {
+                        if (!block.isBeaconBase(this.field_145850_b, new BlockPos(k1, j1, l1), func_174877_v())) {
                             flag1 = false;
                             break;
                         }
@@ -432,8 +433,8 @@ public class TileEntityBeacon extends TileEntityLockable implements ITickable, I
     public void func_174886_c(EntityPlayer entityhuman) {}
 
     @Override
-    public boolean func_94041_b(int i, ItemStack itemstack) {
-        return itemstack.func_77973_b() == Items.field_151166_bC || itemstack.func_77973_b() == Items.field_151045_i || itemstack.func_77973_b() == Items.field_151043_k || itemstack.func_77973_b() == Items.field_151042_j;
+    public boolean func_94041_b(int p_94041_1_, ItemStack p_94041_2_) {
+        return p_94041_2_.func_77973_b() != null && p_94041_2_.func_77973_b().isBeaconPayment(p_94041_2_);
     }
 
     @Override

@@ -163,6 +163,7 @@ public class DataFixesManager {
 
     public static DataFixer func_188279_a() {
         DataFixer dataconvertermanager = new DataFixer(1343);
+        dataconvertermanager = new net.minecraftforge.common.util.CompoundDataFixer(dataconvertermanager);
 
         WorldInfo.func_189967_a(dataconvertermanager);
         EntityPlayerMP.func_191522_a(dataconvertermanager);

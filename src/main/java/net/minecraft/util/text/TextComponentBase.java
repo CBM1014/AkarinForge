@@ -118,4 +118,23 @@ public abstract class TextComponentBase implements ITextComponent {
     public String toString() {
         return "BaseComponent{style=" + this.field_150263_b + ", siblings=" + this.field_150264_a + '}';
     }
+    
+    public final String func_150254_d()
+    {
+        StringBuilder stringbuilder = new StringBuilder();
+
+        for (ITextComponent itextcomponent : this)
+        {
+            String s = itextcomponent.func_150261_e();
+
+            if (!s.isEmpty())
+            {
+                stringbuilder.append(itextcomponent.func_150256_b().func_150218_j());
+                stringbuilder.append(s);
+                stringbuilder.append((Object)TextFormatting.RESET);
+            }
+        }
+
+        return stringbuilder.toString();
+    }
 }

@@ -159,9 +159,9 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
         super.func_145839_a(nbttagcompound);
         this.field_145957_n = NonNullList.func_191197_a(this.func_70302_i_(), ItemStack.field_190927_a);
         ItemStackHelper.func_191283_b(nbttagcompound, this.field_145957_n);
-        this.field_145956_a = nbttagcompound.func_74765_d("BurnTime");
-        this.field_174906_k = nbttagcompound.func_74765_d("CookTime");
-        this.field_174905_l = nbttagcompound.func_74765_d("CookTimeTotal");
+        this.field_145956_a = nbttagcompound.func_74762_e("BurnTime");
+        this.field_174906_k = nbttagcompound.func_74762_e("CookTime");
+        this.field_174905_l = nbttagcompound.func_74762_e("CookTimeTotal");
         this.field_145963_i = func_145952_a((ItemStack) this.field_145957_n.get(1));
         if (nbttagcompound.func_150297_b("CustomName", 8)) {
             this.field_145958_o = nbttagcompound.func_74779_i("CustomName");
@@ -171,9 +171,9 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
 
     public NBTTagCompound func_189515_b(NBTTagCompound nbttagcompound) {
         super.func_189515_b(nbttagcompound);
-        nbttagcompound.func_74777_a("BurnTime", (short) this.field_145956_a);
-        nbttagcompound.func_74777_a("CookTime", (short) this.field_174906_k);
-        nbttagcompound.func_74777_a("CookTimeTotal", (short) this.field_174905_l);
+        nbttagcompound.func_74768_a("BurnTime", (short) this.field_145956_a);
+        nbttagcompound.func_74768_a("CookTime", (short) this.field_174906_k);
+        nbttagcompound.func_74768_a("CookTimeTotal", (short) this.field_174905_l);
         ItemStackHelper.func_191282_a(nbttagcompound, this.field_145957_n);
         if (this.func_145818_k_()) {
             nbttagcompound.func_74778_a("CustomName", this.field_145958_o);
@@ -245,9 +245,8 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
 
                             itemstack.func_190918_g(1);
                             if (itemstack.func_190926_b()) {
-                                Item item1 = item.func_77668_q();
-
-                                this.field_145957_n.set(1, item1 == null ? ItemStack.field_190927_a : new ItemStack(item1));
+                                ItemStack item1 = item.getContainerItem(itemstack);
+                                this.field_145957_n.set(1, item1);
                             }
                         }
                     }
@@ -297,7 +296,8 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
                 ItemStack itemstack1 = (ItemStack) this.field_145957_n.get(2);
 
                 // CraftBukkit - consider resultant count instead of current count
-                return itemstack1.func_190926_b() ? true : (!itemstack1.func_77969_a(itemstack) ? false : (itemstack1.func_190916_E() + itemstack.func_190916_E() <= this.func_70297_j_() && itemstack1.func_190916_E() + itemstack.func_190916_E() < itemstack1.func_77976_d() ? true : itemstack1.func_190916_E() + itemstack.func_190916_E() <= itemstack.func_77976_d()));
+                // Forge fix: make furnace respect stack sizes in furnace recipes
+                return itemstack1.func_190926_b() ? true : (!itemstack1.func_77969_a(itemstack) ? false : (itemstack1.func_190916_E() + itemstack.func_190916_E() <= this.func_70297_j_() && itemstack1.func_190916_E() + itemstack.func_190916_E() <= itemstack1.func_77976_d() ? true : itemstack1.func_190916_E() + itemstack.func_190916_E() <= itemstack.func_77976_d()));
             }
         }
     }
@@ -353,6 +353,8 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
         if (itemstack.func_190926_b()) {
             return 0;
         } else {
+            int burnTime = net.minecraftforge.event.ForgeEventFactory.getItemBurnTime(itemstack);
+            if (burnTime >= 0) return burnTime;
             Item item = itemstack.func_77973_b();
 
             return item == Item.func_150898_a(Blocks.field_150376_bx) ? 150 : (item == Item.func_150898_a(Blocks.field_150325_L) ? 100 : (item == Item.func_150898_a(Blocks.field_150404_cg) ? 67 : (item == Item.func_150898_a(Blocks.field_150468_ap) ? 300 : (item == Item.func_150898_a(Blocks.field_150471_bO) ? 100 : (Block.func_149634_a(item).func_176223_P().func_185904_a() == Material.field_151575_d ? 300 : (item == Item.func_150898_a(Blocks.field_150402_ci) ? 16000 : (item instanceof ItemTool && "WOOD".equals(((ItemTool) item).func_77861_e()) ? 200 : (item instanceof ItemSword && "WOOD".equals(((ItemSword) item).func_150932_j()) ? 200 : (item instanceof ItemHoe && "WOOD".equals(((ItemHoe) item).func_77842_f()) ? 200 : (item == Items.field_151055_y ? 100 : (item != Items.field_151031_f && item != Items.field_151112_aM ? (item == Items.field_151155_ap ? 200 : (item == Items.field_151044_h ? 1600 : (item == Items.field_151129_at ? 20000 : (item != Item.func_150898_a(Blocks.field_150345_g) && item != Items.field_151054_z ? (item == Items.field_151072_bj ? 2400 : (item instanceof ItemDoor && item != Items.field_151139_aw ? 200 : (item instanceof ItemBoat ? 400 : 0))) : 100)))) : 300)))))))))));
@@ -456,5 +458,24 @@ public class TileEntityFurnace extends TileEntityLockable implements ITickable, 
 
     public void func_174888_l() {
         this.field_145957_n.clear();
+    }
+    
+    net.minecraftforge.items.IItemHandler handlerTop = new net.minecraftforge.items.wrapper.SidedInvWrapper(this, net.minecraft.util.EnumFacing.UP);
+    net.minecraftforge.items.IItemHandler handlerBottom = new net.minecraftforge.items.wrapper.SidedInvWrapper(this, net.minecraft.util.EnumFacing.DOWN);
+    net.minecraftforge.items.IItemHandler handlerSide = new net.minecraftforge.items.wrapper.SidedInvWrapper(this, net.minecraft.util.EnumFacing.WEST);
+
+    @SuppressWarnings("unchecked")
+    @Override
+    @javax.annotation.Nullable
+    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @javax.annotation.Nullable net.minecraft.util.EnumFacing facing)
+    {
+        if (facing != null && capability == net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+            if (facing == EnumFacing.DOWN)
+                return (T) handlerBottom;
+            else if (facing == EnumFacing.UP)
+                return (T) handlerTop;
+            else
+                return (T) handlerSide;
+        return super.getCapability(capability, facing);
     }
 }

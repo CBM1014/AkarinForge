@@ -380,6 +380,7 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
 
     // Paper end
     private boolean func_145883_k() {
+        if (net.minecraftforge.items.VanillaInventoryCodeHooks.insertHook(this)) { return true; }
         IInventory iinventory = this.func_145895_l();
 
         if (iinventory == null) {
@@ -496,6 +497,8 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
 
     // Paper start - split methods, and only do entity lookup if in pull mode
     public static boolean func_145891_a(IHopper ihopper) {
+        Boolean ret = net.minecraftforge.items.VanillaInventoryCodeHooks.extractHook(ihopper);
+        if (ret != null) return ret;
         IInventory iinventory = getInventory(ihopper, !(ihopper instanceof TileEntityHopper) || !ihopper.func_145831_w().paperConfig.isHopperPushBased);
 
         return acceptItem(ihopper, iinventory);
@@ -798,7 +801,7 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
         return this.field_145901_j > 0;
     }
 
-    private boolean func_174914_o() {
+    public boolean func_174914_o() {
         return this.field_145901_j > 8;
     }
 

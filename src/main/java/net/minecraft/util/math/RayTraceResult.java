@@ -4,6 +4,11 @@ import net.minecraft.util.EnumFacing;
 
 
 public class RayTraceResult {
+    /** Used to determine what sub-segment is hit */
+    public int subHit = -1;
+
+    /** Used to add extra hit info */
+    public Object hitInfo = null;
 
     private BlockPos field_178783_e;
     public RayTraceResult.Type field_72313_a;

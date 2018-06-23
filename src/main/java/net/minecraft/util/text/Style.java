@@ -471,4 +471,48 @@ public class Style {
             }
         }
     }
+    
+    public String func_150218_j()
+    {
+        if (this.func_150229_g())
+        {
+            return this.field_150249_a != null ? this.field_150249_a.func_150218_j() : "";
+        }
+        else
+        {
+            StringBuilder stringbuilder = new StringBuilder();
+
+            if (this.func_150215_a() != null)
+            {
+                stringbuilder.append((Object)this.func_150215_a());
+            }
+
+            if (this.func_150223_b())
+            {
+                stringbuilder.append((Object)TextFormatting.BOLD);
+            }
+
+            if (this.func_150242_c())
+            {
+                stringbuilder.append((Object)TextFormatting.ITALIC);
+            }
+
+            if (this.func_150234_e())
+            {
+                stringbuilder.append((Object)TextFormatting.UNDERLINE);
+            }
+
+            if (this.func_150233_f())
+            {
+                stringbuilder.append((Object)TextFormatting.OBFUSCATED);
+            }
+
+            if (this.func_150236_d())
+            {
+                stringbuilder.append((Object)TextFormatting.STRIKETHROUGH);
+            }
+
+            return stringbuilder.toString();
+        }
+    }
 }

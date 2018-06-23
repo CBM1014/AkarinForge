@@ -21,8 +21,27 @@ public class LanguageMap {
     private long field_150511_e;
 
     public LanguageMap() {
+        InputStream inputstream = LanguageMap.class.getResourceAsStream("/assets/minecraft/lang/en_us.lang");
+        inject(this, inputstream);
+    }
+
+    public static void inject(InputStream inputstream)
+    {
+        inject(field_74817_a, inputstream);
+    }
+
+    private static void inject(LanguageMap inst, InputStream inputstream)
+    {
+        Map<String, String> map = parseLangFile(inputstream);
+        inst.field_74816_c.putAll(map);
+        inst.field_150511_e = System.currentTimeMillis();
+    }
+
+    public static Map<String, String> parseLangFile(InputStream inputstream) {
+        Map<String, String> table = Maps.newHashMap();
         try {
-            InputStream inputstream = LanguageMap.class.getResourceAsStream("/assets/minecraft/lang/en_us.lang");
+            inputstream = net.minecraftforge.fml.common.FMLCommonHandler.instance().loadLanguage(table, inputstream);
+            if (inputstream == null) return table;
             Iterator iterator = IOUtils.readLines(inputstream, StandardCharsets.UTF_8).iterator();
 
             while (iterator.hasNext()) {
@@ -35,15 +54,15 @@ public class LanguageMap {
                         String s1 = astring[0];
                         String s2 = LanguageMap.field_111053_a.matcher(astring[1]).replaceAll("%$1s");
 
-                        this.field_74816_c.put(s1, s2);
+                        table.put(s1, s2);
                     }
                 }
             }
 
-            this.field_150511_e = System.currentTimeMillis();
         } catch (IOException ioexception) {
             ;
-        }
+        } catch (Exception ex) {}
+        return table;
 
     }
 

@@ -24,7 +24,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import org.bukkit.inventory.InventoryHolder;
 
-public abstract class TileEntity {
+public abstract class TileEntity implements net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound> {
 
     public Timing tickTimer = MinecraftTimings.getTileEntityTimings(this); // Paper
     public boolean isLoadingStructure = false; // Paper
@@ -39,6 +39,7 @@ public abstract class TileEntity {
     public TileEntity() {
         this.field_174879_c = BlockPos.field_177992_a;
         this.field_145847_g = -1;
+        capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities(this);
     }
 
     private static void func_190560_a(String s, Class<? extends TileEntity> oclass) {
@@ -63,8 +64,10 @@ public abstract class TileEntity {
         return this.field_145850_b != null;
     }
 
-    public void func_145839_a(NBTTagCompound nbttagcompound) {
-        this.field_174879_c = new BlockPos(nbttagcompound.func_74762_e("x"), nbttagcompound.func_74762_e("y"), nbttagcompound.func_74762_e("z"));
+    public void func_145839_a(NBTTagCompound p_145839_1_) {
+        this.field_174879_c = new BlockPos(p_145839_1_.func_74762_e("x"), p_145839_1_.func_74762_e("y"), p_145839_1_.func_74762_e("z"));
+        if (p_145839_1_.func_74764_b("ForgeData")) this.customTileData = p_145839_1_.func_74775_l("ForgeData");
+        if (this.capabilities != null && p_145839_1_.func_74764_b("ForgeCaps")) this.capabilities.deserializeNBT(p_145839_1_.func_74775_l("ForgeCaps"));
     }
 
     public NBTTagCompound func_189515_b(NBTTagCompound nbttagcompound) {
@@ -81,6 +84,8 @@ public abstract class TileEntity {
             nbttagcompound.func_74768_a("x", this.field_174879_c.func_177958_n());
             nbttagcompound.func_74768_a("y", this.field_174879_c.func_177956_o());
             nbttagcompound.func_74768_a("z", this.field_174879_c.func_177952_p());
+            if (this.customTileData != null) nbttagcompound.func_74782_a("ForgeData", this.customTileData);
+            if (this.capabilities != null) nbttagcompound.func_74782_a("ForgeCaps", this.capabilities.serializeNBT());
             return nbttagcompound;
         }
     }
@@ -89,15 +94,18 @@ public abstract class TileEntity {
     public static TileEntity func_190200_a(World world, NBTTagCompound nbttagcompound) {
         TileEntity tileentity = null;
         String s = nbttagcompound.func_74779_i("id");
+        Class <? extends TileEntity > oclass = null;
 
         try {
-            Class oclass = TileEntity.field_190562_f.func_82594_a(new ResourceLocation(s));
+            oclass = TileEntity.field_190562_f.func_82594_a(new ResourceLocation(s));
 
             if (oclass != null) {
                 tileentity = (TileEntity) oclass.newInstance();
             }
         } catch (Throwable throwable) {
             TileEntity.field_145852_a.error("Failed to create block entity {}", s, throwable);
+            net.minecraftforge.fml.common.FMLLog.log.error("A TileEntity {}({}) has thrown an exception during loading, its state cannot be restored. Report this to the mod author!",
+                    s, oclass == null ? null : oclass.getName(), throwable);
         }
 
         if (tileentity != null) {
@@ -106,6 +114,8 @@ public abstract class TileEntity {
                 tileentity.func_145839_a(nbttagcompound);
             } catch (Throwable throwable1) {
                 TileEntity.field_145852_a.error("Failed to load data for block entity {}", s, throwable1);
+                net.minecraftforge.fml.common.FMLLog.log.error("A TileEntity {}({}) has thrown an exception during loading, its state cannot be restored. Report this to the mod author!",
+                        s, oclass.getName(), throwable1);
                 tileentity = null;
             }
         } else {
@@ -113,6 +123,162 @@ public abstract class TileEntity {
         }
 
         return tileentity;
+    }
+    
+    public double func_145835_a(double p_145835_1_, double p_145835_3_, double p_145835_5_)
+    {
+        double d0 = (double)this.field_174879_c.func_177958_n() + 0.5D - p_145835_1_;
+        double d1 = (double)this.field_174879_c.func_177956_o() + 0.5D - p_145835_3_;
+        double d2 = (double)this.field_174879_c.func_177952_p() + 0.5D - p_145835_5_;
+        return d0 * d0 + d1 * d1 + d2 * d2;
+    }
+    
+ // -- BEGIN FORGE PATCHES --
+    /**
+     * Called when you receive a TileEntityData packet for the location this
+     * TileEntity is currently in. On the client, the NetworkManager will always
+     * be the remote server. On the server, it will be whomever is responsible for
+     * sending the packet.
+     *
+     * @param net The NetworkManager the packet originated from
+     * @param pkt The data packet
+     */
+    public void onDataPacket(net.minecraft.network.NetworkManager net, net.minecraft.network.play.server.SPacketUpdateTileEntity pkt)
+    {
+    }
+
+    /**
+     * Called when the chunk's TE update tag, gotten from {@link #getUpdateTag()}, is received on the client.
+     * <p>
+     * Used to handle this tag in a special way. By default this simply calls {@link #readFromNBT(NBTTagCompound)}.
+     *
+     * @param tag The {@link NBTTagCompound} sent from {@link #getUpdateTag()}
+     */
+    public void handleUpdateTag(NBTTagCompound tag)
+    {
+        this.func_145839_a(tag);
+    }
+
+    /**
+     * Called when the chunk this TileEntity is on is Unloaded.
+     */
+    public void onChunkUnload()
+    {
+    }
+
+    private boolean isVanilla = getClass().getName().startsWith("net.minecraft.");
+    /**
+     * Called from Chunk.setBlockIDWithMetadata and Chunk.fillChunk, determines if this tile entity should be re-created when the ID, or Metadata changes.
+     * Use with caution as this will leave straggler TileEntities, or create conflicts with other TileEntities if not used properly.
+     *
+     * @param world Current world
+     * @param pos Tile's world position
+     * @param oldState The old ID of the block
+     * @param newState The new ID of the block (May be the same)
+     * @return true forcing the invalidation of the existing TE, false not to invalidate the existing TE
+     */
+    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newSate)
+    {
+        return isVanilla ? (oldState.func_177230_c() != newSate.func_177230_c()) : oldState != newSate;
+    }
+
+    public boolean shouldRenderInPass(int pass)
+    {
+        return pass == 0;
+    }
+
+    /**
+     * Sometimes default render bounding box: infinite in scope. Used to control rendering on {@link TileEntitySpecialRenderer}.
+     */
+    public static final net.minecraft.util.math.AxisAlignedBB INFINITE_EXTENT_AABB = new net.minecraft.util.math.AxisAlignedBB(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+
+    /**
+     * Checks if this tile entity knows how to render its 'breaking' overlay effect.
+     * If this returns true, The TileEntitySpecialRenderer will be called again with break progress set.
+     * @return True to re-render tile with breaking effect.
+     */
+    public boolean canRenderBreaking()
+    {
+        Block block = this.func_145838_q();
+        return (block instanceof net.minecraft.block.BlockChest ||
+                block instanceof net.minecraft.block.BlockEnderChest ||
+                block instanceof net.minecraft.block.BlockSign ||
+                block instanceof net.minecraft.block.BlockSkull);
+    }
+
+    private NBTTagCompound customTileData;
+
+    /**
+     * Gets a {@link NBTTagCompound} that can be used to store custom data for this tile entity.
+     * It will be written, and read from disc, so it persists over world saves.
+     *
+     * @return A compound tag for custom data
+     */
+    public NBTTagCompound getTileData()
+    {
+        if (this.customTileData == null)
+        {
+            this.customTileData = new NBTTagCompound();
+        }
+        return this.customTileData;
+    }
+
+    /**
+     * Determines if the player can overwrite the NBT data of this tile entity while they place it using a ItemStack.
+     * Added as a fix for MC-75630 - Exploit with signs and command blocks
+     * @return True to prevent NBT copy, false to allow.
+     */
+    public boolean restrictNBTCopy()
+    {
+        return this instanceof TileEntityCommandBlock ||
+               this instanceof TileEntityMobSpawner ||
+               this instanceof TileEntitySign;
+    }
+
+
+    /**
+     * Called when this is first added to the world (by {@link World#addTileEntity(TileEntity)}).
+     * Override instead of adding {@code if (firstTick)} stuff in update.
+     */
+    public void onLoad()
+    {
+        // NOOP
+    }
+
+    /**
+     * If the TileEntitySpecialRenderer associated with this TileEntity can be batched in with another renderers, and won't access the GL state.
+     * If TileEntity returns true, then TESR should have the same functionality as (and probably extend) the FastTESR class.
+     */
+    public boolean hasFastRenderer()
+    {
+        return false;
+    }
+
+    private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
+
+    @Override
+    public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.EnumFacing facing)
+    {
+        return capabilities == null ? false : capabilities.hasCapability(capability, facing);
+    }
+
+    @Override
+    @Nullable
+    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.util.EnumFacing facing)
+    {
+        return capabilities == null ? null : capabilities.getCapability(capability, facing);
+    }
+
+    public void deserializeNBT(NBTTagCompound nbt)
+    {
+        this.func_145839_a(nbt);
+    }
+
+    public NBTTagCompound serializeNBT()
+    {
+        NBTTagCompound ret = new NBTTagCompound();
+        this.func_189515_b(ret);
+        return ret;
     }
 
     protected void func_190201_b(World world) {}

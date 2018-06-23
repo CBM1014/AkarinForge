@@ -261,6 +261,12 @@ public enum EnumFacing implements IStringSerializable {
             this.field_176726_e = s;
             this.field_176723_f = enumdirection_enumdirectionlimit;
         }
+        
+        @Nullable
+        public static EnumFacing.Axis func_176717_a(String p_176717_0_)
+        {
+            return p_176717_0_ == null ? null : (EnumFacing.Axis)field_176725_d.get(p_176717_0_.toLowerCase(Locale.ROOT));
+        }
 
         public String func_176719_a() {
             return this.field_176726_e;
@@ -304,5 +310,105 @@ public enum EnumFacing implements IStringSerializable {
             }
 
         }
+    }
+    
+    public EnumFacing func_176732_a(EnumFacing.Axis p_176732_1_)
+    {
+        switch (p_176732_1_)
+        {
+            case X:
+
+                if (this != WEST && this != EAST)
+                {
+                    return this.func_176744_n();
+                }
+
+                return this;
+            case Y:
+
+                if (this != UP && this != DOWN)
+                {
+                    return this.func_176746_e();
+                }
+
+                return this;
+            case Z:
+
+                if (this != NORTH && this != SOUTH)
+                {
+                    return this.func_176738_p();
+                }
+
+                return this;
+            default:
+                throw new IllegalStateException("Unable to get CW facing for axis " + p_176732_1_);
+        }
+    }
+    
+    private EnumFacing func_176744_n()
+    {
+        switch (this)
+        {
+            case NORTH:
+                return DOWN;
+            case EAST:
+            case WEST:
+            default:
+                throw new IllegalStateException("Unable to get X-rotated facing of " + this);
+            case SOUTH:
+                return UP;
+            case UP:
+                return NORTH;
+            case DOWN:
+                return SOUTH;
+        }
+    }
+    
+    private EnumFacing func_176738_p()
+    {
+        switch (this)
+        {
+            case EAST:
+                return DOWN;
+            case SOUTH:
+            default:
+                throw new IllegalStateException("Unable to get Z-rotated facing of " + this);
+            case WEST:
+                return UP;
+            case UP:
+                return EAST;
+            case DOWN:
+                return WEST;
+        }
+    }
+    
+    @Nullable
+    public static EnumFacing func_176739_a(String p_176739_0_)
+    {
+        return p_176739_0_ == null ? null : (EnumFacing)field_176761_p.get(p_176739_0_.toLowerCase(Locale.ROOT));
+    }
+    
+    public static EnumFacing func_176737_a(float p_176737_0_, float p_176737_1_, float p_176737_2_)
+    {
+        EnumFacing enumfacing = NORTH;
+        float f = Float.MIN_VALUE;
+
+        for (EnumFacing enumfacing1 : values())
+        {
+            float f1 = p_176737_0_ * (float)enumfacing1.field_176756_m.func_177958_n() + p_176737_1_ * (float)enumfacing1.field_176756_m.func_177956_o() + p_176737_2_ * (float)enumfacing1.field_176756_m.func_177952_p();
+
+            if (f1 > f)
+            {
+                f = f1;
+                enumfacing = enumfacing1;
+            }
+        }
+
+        return enumfacing;
+    }
+    
+    public Vec3i func_176730_m()
+    {
+        return this.field_176756_m;
     }
 }

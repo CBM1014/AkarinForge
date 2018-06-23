@@ -33,6 +33,8 @@ public interface ITextComponent extends Iterable<ITextComponent> {
     String func_150261_e();
 
     String func_150260_c();
+    
+    String func_150254_d();
 
     List<ITextComponent> func_150253_a();
 

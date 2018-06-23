@@ -184,4 +184,28 @@ public class Vec3d {
 
         return new Vec3d(d0, d1, d2);
     }
+    
+    public Vec3d func_72431_c(Vec3d p_72431_1_)
+    {
+        return new Vec3d(this.field_72448_b * p_72431_1_.field_72449_c - this.field_72449_c * p_72431_1_.field_72448_b, this.field_72449_c * p_72431_1_.field_72450_a - this.field_72450_a * p_72431_1_.field_72449_c, this.field_72450_a * p_72431_1_.field_72448_b - this.field_72448_b * p_72431_1_.field_72450_a);
+    }
+    
+    public double func_189985_c()
+    {
+        return this.field_72450_a * this.field_72450_a + this.field_72448_b * this.field_72448_b + this.field_72449_c * this.field_72449_c;
+    }
+    
+    public static Vec3d func_189984_a(Vec2f p_189984_0_)
+    {
+        return func_189986_a(p_189984_0_.field_189982_i, p_189984_0_.field_189983_j);
+    }
+    
+    public static Vec3d func_189986_a(float p_189986_0_, float p_189986_1_)
+    {
+        float f = MathHelper.func_76134_b(-p_189986_1_ * 0.017453292F - (float)Math.PI);
+        float f1 = MathHelper.func_76126_a(-p_189986_1_ * 0.017453292F - (float)Math.PI);
+        float f2 = -MathHelper.func_76134_b(-p_189986_0_ * 0.017453292F);
+        float f3 = MathHelper.func_76126_a(-p_189986_0_ * 0.017453292F);
+        return new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
+    }
 }

@@ -171,4 +171,12 @@ public class IntIdentityHashBiMap<K> implements IObjectIntIterable<K>
     {
         return this.field_186822_f;
     }
+    
+    public void func_186812_a()
+    {
+        Arrays.fill(this.field_186818_b, (Object)null);
+        Arrays.fill(this.field_186820_d, (Object)null);
+        this.field_186821_e = 0;
+        this.field_186822_f = 0;
+    }
 }

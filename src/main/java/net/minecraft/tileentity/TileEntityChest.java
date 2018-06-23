@@ -139,6 +139,7 @@ public class TileEntityChest extends TileEntityLockableLoot { // Paper - Remove 
     public void func_145836_u() {
         super.func_145836_u();
         this.field_145984_a = false;
+        doubleChestHandler = null;
     }
 
     private void func_174910_a(TileEntityChest tileentitychest, EnumFacing enumdirection) {
@@ -175,12 +176,35 @@ public class TileEntityChest extends TileEntityLockableLoot { // Paper - Remove 
 
     public void func_145979_i() {
         if (!this.field_145984_a) {
+            if (this.field_145850_b == null || !this.field_145850_b.func_175697_a(this.field_174879_c, 1)) return; // Forge: prevent loading unloaded chunks when checking neighbors
             this.field_145984_a = true;
             this.field_145991_k = this.func_174911_a(EnumFacing.WEST);
             this.field_145990_j = this.func_174911_a(EnumFacing.EAST);
             this.field_145992_i = this.func_174911_a(EnumFacing.NORTH);
             this.field_145988_l = this.func_174911_a(EnumFacing.SOUTH);
         }
+    }
+    
+    public net.minecraftforge.items.VanillaDoubleChestItemHandler doubleChestHandler;
+
+    @SuppressWarnings("unchecked")
+    @Override
+    @Nullable
+    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.util.EnumFacing facing)
+    {
+        if (capability == net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+        {
+            if(doubleChestHandler == null || doubleChestHandler.needsRefresh())
+                doubleChestHandler = net.minecraftforge.items.VanillaDoubleChestItemHandler.get(this);
+            if (doubleChestHandler != null && doubleChestHandler != net.minecraftforge.items.VanillaDoubleChestItemHandler.NO_ADJACENT_CHESTS_INSTANCE)
+                return (T) doubleChestHandler;
+        }
+        return super.getCapability(capability, facing);
+    }
+
+    public net.minecraftforge.items.IItemHandler getSingleChestHandler()
+    {
+        return super.getCapability(net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
     }
 
     @Nullable
