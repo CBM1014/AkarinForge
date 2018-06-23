@@ -233,7 +233,7 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
 
     // Paper start - Optimize Hoppers
     private static boolean skipPullModeEventFire = false;
-    private static boolean skipPushModeEventFire = false;
+    public static boolean skipPushModeEventFire = false; // ACCESS private -> public
     public static boolean skipHopperEvents = false;
 
     private boolean hopperPush(IInventory iinventory, EnumFacing enumdirection) {
@@ -252,7 +252,7 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
                 // We only need to fire the event once to give protection plugins a chance to cancel this event
                 // Because nothing uses getItem, every event call should end up the same result.
                 if (!skipPushModeEventFire) {
-                    itemstack = callPushMoveEvent(iinventory, itemstack);
+                    itemstack = callPushMoveEvent(this, iinventory, itemstack);
                     if (itemstack == null) { // cancelled
                         origItemStack.func_190920_e(origCount);
                         return false;
@@ -315,16 +315,16 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
         return false;
     }
 
-    private ItemStack callPushMoveEvent(IInventory iinventory, ItemStack itemstack) {
+    public static ItemStack callPushMoveEvent(TileEntityHopper hopper, IInventory iinventory, ItemStack itemstack) { // ACCESS Akarin Forge
         Inventory destinationInventory = getInventory(iinventory);
-        InventoryMoveItemEvent event = new InventoryMoveItemEvent(this.getOwner(false).getInventory(),
+        InventoryMoveItemEvent event = new InventoryMoveItemEvent(hopper.getOwner(false).getInventory(), // Akarin Forge
                 CraftItemStack.asCraftMirror(itemstack), destinationInventory, true);
         boolean result = event.callEvent();
         if (!event.calledGetItem && !event.calledSetItem) {
             skipPushModeEventFire = true;
         }
         if (!result) {
-            cooldownHopper(this);
+            cooldownHopper(hopper); // Akarin Forge
             return null;
         }
 
@@ -380,8 +380,8 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
 
     // Paper end
     private boolean func_145883_k() {
-        if (net.minecraftforge.items.VanillaInventoryCodeHooks.insertHook(this)) { return true; }
         IInventory iinventory = this.func_145895_l();
+        if (net.minecraftforge.items.VanillaInventoryCodeHooks.insertHook(this, iinventory)) { return true; }
 
         if (iinventory == null) {
             return false;

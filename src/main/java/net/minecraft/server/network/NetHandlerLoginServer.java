@@ -93,6 +93,7 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable 
             if (entityplayer == null) {
                 this.field_147328_g = NetHandlerLoginServer.LoginState.READY_TO_ACCEPT;
                 net.minecraftforge.fml.common.network.internal.FMLNetworkHandler.fmlServerHandshake(this.field_147327_f.func_184103_al(), this.field_147333_a, this.field_181025_l);
+                this.field_147327_f.func_184103_al().func_72355_a(this.field_147333_a, this.field_181025_l); // Akarin Forge
                 this.field_181025_l = null;
             }
         }
@@ -195,7 +196,9 @@ public class NetHandlerLoginServer implements INetHandlerLoginServer, ITickable 
                 this.field_147328_g = NetHandlerLoginServer.LoginState.DELAY_ACCEPT;
                 this.field_181025_l = this.field_147327_f.func_184103_al().processLogin(this.field_147337_i, s); // CraftBukkit - add player reference
             } else {
-                net.minecraftforge.fml.common.network.internal.FMLNetworkHandler.fmlServerHandshake(this.field_147327_f.func_184103_al(), this.field_147333_a, this.field_147327_f.func_184103_al().processLogin(this.field_147337_i)); // CraftBukkit - add player reference
+                EntityPlayerMP player = this.field_147327_f.func_184103_al().processLogin(this.field_147337_i, s);
+                net.minecraftforge.fml.common.network.internal.FMLNetworkHandler.fmlServerHandshake(this.field_147327_f.func_184103_al(), this.field_147333_a, player); // CraftBukkit - add player reference
+                this.field_147327_f.func_184103_al().func_72355_a(this.field_147333_a, player); // Akarin Forge
             }
         }
 

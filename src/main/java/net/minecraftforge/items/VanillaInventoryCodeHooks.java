@@ -140,7 +140,7 @@ public class VanillaInventoryCodeHooks
     /**
      * Copied from TileEntityHopper#transferItemsOut and added capability support
      */
-    public static boolean insertHook(TileEntityHopper hopper)
+    public static boolean insertHook(TileEntityHopper hopper, IInventory iinventory)
     {
         EnumFacing hopperFacing = BlockHopper.func_176428_b(hopper.func_145832_p());
         Pair<IItemHandler, Object> destinationResult = getItemHandler(hopper, hopperFacing);
@@ -164,6 +164,16 @@ public class VanillaInventoryCodeHooks
                     {
                         ItemStack originalSlotContents = hopper.func_70301_a(i).func_77946_l();
                         ItemStack insertStack = hopper.func_70298_a(i, 1);
+                        // We only need to fire the event once to give protection plugins a chance to cancel this event
+                        // Because nothing uses getItem, every event call should end up the same result.
+                        if (!TileEntityHopper.skipPushModeEventFire) {
+                            insertStack = TileEntityHopper.callPushMoveEvent((TileEntityHopper) hopper, iinventory, insertStack);
+                            if (insertStack == null) { // cancelled
+                                int origCount = originalSlotContents.func_190916_E();
+                                originalSlotContents.func_190920_e(origCount);
+                                return false;
+                            }
+                        }
                         ItemStack remainder = putStackInInventoryAllSlots(hopper, destination, itemHandler, insertStack);
 
                         if (remainder.func_190926_b())
