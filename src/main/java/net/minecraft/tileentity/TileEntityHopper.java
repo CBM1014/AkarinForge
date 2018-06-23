@@ -503,6 +503,10 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
 
         return acceptItem(ihopper, iinventory);
     }
+    
+    protected net.minecraftforge.items.IItemHandler createUnSidedHandler() {
+        return new net.minecraftforge.items.VanillaHopperItemHandler(this);
+    }
 
     public static boolean acceptItem(IHopper ihopper, IInventory iinventory) {
         // Paper end
@@ -753,9 +757,10 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
         int k = MathHelper.func_76128_c(d2);
         BlockPos blockposition = new BlockPos(i, j, k);
         if ( !world.func_175667_e( blockposition ) ) return null; // Spigot
-        Block block = world.func_180495_p(blockposition).func_177230_c();
+        net.minecraft.block.state.IBlockState state = world.func_180495_p(blockposition);
+        Block block = state.func_177230_c();
 
-        if (block.func_149716_u()) {
+        if (block.hasTileEntity(state)) {
             TileEntity tileentity = world.func_175625_s(blockposition);
 
             if (tileentity instanceof IInventory) {
@@ -776,6 +781,8 @@ public class TileEntityHopper extends TileEntityLockableLoot implements IHopper,
 
         return (IInventory) object;
     }
+    
+    public long getLastUpdateTime() { return field_190578_g; } // Forge
 
     private static boolean func_145894_a(ItemStack itemstack, ItemStack itemstack1) {
         return itemstack.func_77973_b() != itemstack1.func_77973_b() ? false : (itemstack.func_77960_j() != itemstack1.func_77960_j() ? false : (itemstack.func_190916_E() > itemstack.func_77976_d() ? false : ItemStack.func_77970_a(itemstack, itemstack1)));
