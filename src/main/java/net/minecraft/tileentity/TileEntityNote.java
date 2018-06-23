@@ -31,7 +31,9 @@ public class TileEntityNote extends TileEntity {
     }
 
     public void func_145877_a() {
+        byte old = field_145879_a;
         this.field_145879_a = (byte) ((this.field_145879_a + 1) % 25);
+        if (!net.minecraftforge.common.ForgeHooks.onNoteChange(this, old)) return;
         this.func_70296_d();
     }
 

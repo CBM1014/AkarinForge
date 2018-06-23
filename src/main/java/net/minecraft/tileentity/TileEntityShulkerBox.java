@@ -377,4 +377,9 @@ public class TileEntityShulkerBox extends TileEntityLockableLoot implements ITic
 
         private AnimationStatus() {}
     }
+    
+    protected net.minecraftforge.items.IItemHandler createUnSidedHandler()
+    {
+        return new net.minecraftforge.items.wrapper.SidedInvWrapper(this, EnumFacing.UP);
+    }
 }

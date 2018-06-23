@@ -69,7 +69,7 @@ public abstract class TileEntityLockableLoot extends TileEntityLockable implemen
             LootContext.Builder loottableinfo_a = new LootContext.Builder((WorldServer) this.field_145850_b);
 
             if (entityhuman != null) {
-                loottableinfo_a.func_186469_a(entityhuman.func_184817_da());
+                loottableinfo_a.func_186469_a(entityhuman.func_184817_da()).func_186470_a(entityhuman); // Forge: add player to LootContext
             }
 
             loottable.func_186460_a(this, random, loottableinfo_a.func_186471_a());

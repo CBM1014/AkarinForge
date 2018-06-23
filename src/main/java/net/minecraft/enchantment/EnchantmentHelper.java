@@ -131,6 +131,7 @@ public class EnchantmentHelper {
         EnchantmentHelper.field_77520_b.field_77497_a = 0;
         EnchantmentHelper.field_77520_b.field_77496_b = damagesource;
         func_77516_a((EnchantmentHelper.IModifier) EnchantmentHelper.field_77520_b, iterable);
+        field_77520_b.field_77496_b = null; //Forge Fix memory leaks: https://bugs.mojang.com/browse/MC-128547
         return EnchantmentHelper.field_77520_b.field_77497_a;
     }
 
@@ -158,6 +159,8 @@ public class EnchantmentHelper {
             func_77518_a((EnchantmentHelper.IModifier) EnchantmentHelper.field_151388_d, entityliving.func_184614_ca());
         }
 
+        field_151388_d.field_151363_b = null; //Forge Fix memory leaks: https://bugs.mojang.com/browse/MC-128547
+        field_151388_d.field_151364_a = null;
     }
 
     public static void func_151385_b(EntityLivingBase entityliving, Entity entity) {
@@ -171,6 +174,8 @@ public class EnchantmentHelper {
             func_77518_a((EnchantmentHelper.IModifier) EnchantmentHelper.field_151389_e, entityliving.func_184614_ca());
         }
 
+        field_151389_e.field_151366_a = null; //Forge Fix memory leaks: https://bugs.mojang.com/browse/MC-128547
+        field_151389_e.field_151365_b = null;
     }
 
     public static int func_185284_a(Enchantment enchantment, EntityLivingBase entityliving) {
@@ -267,7 +272,7 @@ public class EnchantmentHelper {
 
     public static int func_77514_a(Random random, int i, int j, ItemStack itemstack) {
         Item item = itemstack.func_77973_b();
-        int k = item.func_77619_b();
+        int k = item.getItemEnchantability(itemstack);
 
         if (k <= 0) {
             return 0;
@@ -308,7 +313,7 @@ public class EnchantmentHelper {
     public static List<EnchantmentData> func_77513_b(Random random, ItemStack itemstack, int i, boolean flag) {
         ArrayList arraylist = Lists.newArrayList();
         Item item = itemstack.func_77973_b();
-        int j = item.func_77619_b();
+        int j = item.getItemEnchantability(itemstack);
 
         if (j <= 0) {
             return arraylist;
@@ -357,7 +362,7 @@ public class EnchantmentHelper {
         while (iterator.hasNext()) {
             Enchantment enchantment = (Enchantment) iterator.next();
 
-            if ((!enchantment.func_185261_e() || flag) && (enchantment.field_77351_y.func_77557_a(item) || flag1)) {
+            if ((!enchantment.func_185261_e() || flag) && (enchantment.canApplyAtEnchantingTable(itemstack) || (flag1 && enchantment.isAllowedOnBooks()))) {
                 for (int j = enchantment.func_77325_b(); j > enchantment.func_77319_d() - 1; --j) {
                     if (i >= enchantment.func_77321_a(j) && i <= enchantment.func_77317_b(j)) {
                         arraylist.add(new EnchantmentData(enchantment, j));

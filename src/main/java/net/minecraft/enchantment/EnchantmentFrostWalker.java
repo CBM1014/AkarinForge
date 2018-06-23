@@ -55,7 +55,7 @@ public class EnchantmentFrostWalker extends Enchantment {
                     if (iblockdata.func_185904_a() == Material.field_151579_a) {
                         IBlockState iblockdata1 = world.func_180495_p(blockposition_mutableblockposition1);
 
-                        if (iblockdata1.func_185904_a() == Material.field_151586_h && ((Integer) iblockdata1.func_177229_b(BlockLiquid.field_176367_b)).intValue() == 0 && world.func_190527_a(Blocks.field_185778_de, blockposition_mutableblockposition1, false, EnumFacing.DOWN, (Entity) null)) {
+                        if (iblockdata1.func_185904_a() == Material.field_151586_h && (iblockdata1.func_177230_c() == net.minecraft.init.Blocks.field_150355_j || iblockdata1.func_177230_c() == net.minecraft.init.Blocks.field_150358_i) && ((Integer) iblockdata1.func_177229_b(BlockLiquid.field_176367_b)).intValue() == 0 && world.func_190527_a(Blocks.field_185778_de, blockposition_mutableblockposition1, false, EnumFacing.DOWN, (Entity) null)) {
                             // CraftBukkit Start - Call EntityBlockFormEvent for Frost Walker
                             if (org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockFormEvent(world, blockposition_mutableblockposition1, Blocks.field_185778_de.func_176223_P(), entityliving)) {
                                 world.func_175684_a(blockposition_mutableblockposition1.func_185334_h(), Blocks.field_185778_de, MathHelper.func_76136_a(entityliving.func_70681_au(), 60, 120));

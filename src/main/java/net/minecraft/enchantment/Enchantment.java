@@ -16,9 +16,9 @@ import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 
-public abstract class Enchantment {
+public abstract class Enchantment extends net.minecraftforge.registries.IForgeRegistryEntry.Impl<Enchantment> {
 
-    public static final RegistryNamespaced<ResourceLocation, Enchantment> field_185264_b = new RegistryNamespaced();
+    public static final RegistryNamespaced<ResourceLocation, Enchantment> field_185264_b = net.minecraftforge.registries.GameData.getWrapper(Enchantment.class);
     private final EntityEquipmentSlot[] field_185263_a;
     private final Enchantment.Rarity field_77333_a;
     @Nullable
@@ -118,7 +118,27 @@ public abstract class Enchantment {
     }
 
     public boolean func_92089_a(ItemStack itemstack) {
-        return this.field_77351_y.func_77557_a(itemstack.func_77973_b());
+        return canApplyAtEnchantingTable(itemstack);
+    }
+    
+    /**
+     * This applies specifically to applying at the enchanting table. The other method {@link #canApply(ItemStack)}
+     * applies for <i>all possible</i> enchantments.
+     * @param stack
+     * @return
+     */
+    public boolean canApplyAtEnchantingTable(ItemStack stack)
+    {
+        return stack.func_77973_b().canApplyAtEnchantingTable(stack, this);
+    }
+
+    /**
+     * Is this enchantment allowed to be enchanted on books via Enchantment Table
+     * @return false to disable the vanilla feature
+     */
+    public boolean isAllowedOnBooks()
+    {
+        return true;
     }
 
     public void func_151368_a(EntityLivingBase entityliving, Entity entity, int i) {}

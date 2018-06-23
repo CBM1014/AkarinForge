@@ -107,7 +107,7 @@ public class TileEntityPiston extends TileEntity implements ITickable {
             List list = this.field_145850_b.func_72839_b((Entity) null, this.func_190610_a(axisalignedbb, enumdirection, d0).func_111270_a(axisalignedbb));
 
             if (!list.isEmpty()) {
-                boolean flag = this.field_174932_a.func_177230_c() == Blocks.field_180399_cE;
+                boolean flag = this.field_174932_a.func_177230_c().isStickyBlock(this.field_174932_a);
 
                 for (int i = 0; i < list.size(); ++i) {
                     Entity entity = (Entity) list.get(i);

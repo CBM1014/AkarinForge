@@ -66,7 +66,7 @@ public class TileEntitySign extends TileEntity {
 
             @Override
             public boolean func_70003_b(int i, String s) {
-                return true;
+                return i <= 2; //Forge: Fixes  MC-75630 - Exploit with signs and command blocks
             }
 
             @Override
