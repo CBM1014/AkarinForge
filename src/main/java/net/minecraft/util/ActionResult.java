@@ -17,4 +17,9 @@ public class ActionResult<T> {
     public T func_188398_b() {
         return this.field_188400_b;
     }
+    
+    //Just a generic helper function to make typecasing easier...
+    public static <T> ActionResult<T> newResult(EnumActionResult result, T value) {
+        return new ActionResult<T>(result, value);
+    }
 }

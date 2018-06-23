@@ -32,6 +32,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -2232,6 +2233,18 @@ public class Block extends net.minecraftforge.registries.IForgeRegistryEntry.Imp
         return null;
     }
     
+    /**
+     * Queries if this block should render in a given layer.
+     * ISmartBlockModel can use {@link net.minecraftforge.client.MinecraftForgeClient#getRenderLayer()} to alter their model based on layer.
+     */
+    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer)
+    {
+        return func_180664_k() == layer;
+    }
+    public BlockRenderLayer func_180664_k()
+    {
+        return BlockRenderLayer.SOLID;
+    }
     // For Internal use only to capture droped items inside getDrops
     protected static ThreadLocal<Boolean> captureDrops = ThreadLocal.withInitial(() -> false);
     protected static ThreadLocal<NonNullList<ItemStack>> capturedDrops = ThreadLocal.withInitial(NonNullList::func_191196_a);
