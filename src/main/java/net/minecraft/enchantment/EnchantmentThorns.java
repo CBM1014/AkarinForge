@@ -43,12 +43,33 @@ public class EnchantmentThorns extends Enchantment {
             }
 
             if (!itemstack.func_190926_b()) {
-                itemstack.func_77972_a(3, entityliving);
+                damageArmor(itemstack, 3, entityliving);
             }
         } else if (!itemstack.func_190926_b()) {
-            itemstack.func_77972_a(1, entityliving);
+            damageArmor(itemstack, 1, entityliving);
         }
 
+    }
+    
+    private void damageArmor(ItemStack stack, int amount, EntityLivingBase entity)
+    {
+        int slot = -1;
+        int x = 0;
+        for (ItemStack i : entity.func_184193_aE())
+        {
+            if (i == stack){
+                slot = x;
+                break;
+            }
+            x++;
+        }
+        if (slot == -1 || !(stack.func_77973_b() instanceof net.minecraftforge.common.ISpecialArmor))
+        {
+            stack.func_77972_a(1, entity);
+            return;
+        }
+        net.minecraftforge.common.ISpecialArmor armor = (net.minecraftforge.common.ISpecialArmor)stack.func_77973_b();
+        armor.damageArmor(entity, stack, DamageSource.func_92087_a(entity), amount, slot);
     }
 
     public static boolean func_92094_a(int i, Random random) {

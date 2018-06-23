@@ -79,7 +79,15 @@ public enum EnumEnchantmentType {
 
     private EnumEnchantmentType() {}
 
-    public abstract boolean func_77557_a(Item item);
+    private com.google.common.base.Predicate<Item> delegate = null;
+    private EnumEnchantmentType(com.google.common.base.Predicate<Item> delegate)
+    {
+        this.delegate = delegate;
+    }
+    public boolean func_77557_a(Item p_77557_1_)
+    {
+        return this.delegate == null ? false : this.delegate.apply(p_77557_1_);
+    }
 
     EnumEnchantmentType(Object object) {
         this();
